@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistem Manajemen Aset</title>
+    <title>Login Aset</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="apple-touch-icon-precomposed" sizes="57x57" href="Gambar/apple-touch-icon-57x57.png" />
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="Gambar/apple-touch-icon-114x114.png" />
@@ -25,417 +25,132 @@
     <meta name="msapplication-square150x150logo" content="mstile-150x150.png" />
     <meta name="msapplication-wide310x150logo" content="mstile-310x150.png" />
     <meta name="msapplication-square310x310logo" content="mstile-310x310.png" />
+    <style>
+      .page-section {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+    </style>
+    <style>
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+      .animate-fade-in-out {
+        animation: fadeInOut 3s ease-in-out;
+      }
+    </style>
   </head>
-  <body class="flex flex-col min-h-screen bg-gray-100">
-    <!-- ========== Sidebar ========== -->
-    <div class="flex flex-col md:flex-row flex-1">
-      <aside id="sidebar" class="w-64 bg-white shadow h-screen p-6 fixed top-0 left-0 z-50 transform -translate-x-full transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:block">
-        <nav class="space-y-4">
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="home">🏠 Home</a>
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="inventaris">📦 Inventaris</a>
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="mutasi">🚚 Mutasi</a>
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="peminjaman">🏢 Peminjaman</a>
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="zoom">🎦 Zoom</a>
-          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="grab">🚕 Grab</a>
-          <button href="#" id="reset-data-link" class="hidden bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full" onclick="resetAllData()">🗑️ Reset Semua Data</button>
-        </nav>
-      </aside>
-      <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
-
-      <!-- ========== Content ========== -->
-      <main class="flex-1 p-6 overflow-y-auto">
-        <!-- Topbar -->
-        <div class="flex items-center justify-between mb-10 w-full">
-          <button class="block md:hidden text-gray-700 focus:outline-none" onclick="toggleSidebar()">
-            <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <img src="Gambar/Logo Si Bsbe.png" alt="Pantau.in Logo" class="h-12 ml-4" />
-          <div class="flex items-center gap-4">
-            <span id="greeting" class="text-gray-700 font-medium"></span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 1116 0H2z" clip-rule="evenodd" />
-            </svg>
-            <button onclick="logout()" class="text-sm bg-red-200 hover:bg-red-200 text-red-600 px-3 py-1 rounded-full transition" title="Logout">Logout</button>
+  <body class="bg-gradient-to-tr from-blue-100 via-purple-100 to-pink-100 min-h-screen flex flex-col justify-between items-center">
+    <!-- Kotak Login -->
+    <div class="flex-1 flex items-center justify-center w-full">
+      <div class="w-full max-w-sm bg-white p-10 rounded-2xl shadow-xl">
+        <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">🚀 Login Sik Bolo</h1>
+        <form id="loginForm" class="space-y-5">
+          <!-- Username -->
+          <div class="relative">
+            <label for="username" class="block text-gray-700 mb-1">Username</label>
+            <div class="absolute left-3 top-10 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A4.992 4.992 0 0112 15a4.992 4.992 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <input type="text" id="username" placeholder="Masukkan username" class="w-full pl-10 pr-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" required />
           </div>
-        </div>
 
-        <!-- Home Section -->
-        <div id="home" class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10">
-          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Statistik Pengelolaan Aset</h2>
-
-          <!-- Statistik Baris Atas -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-blue-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-600">Inventaris</h3>
-              <p class="text-2xl font-bold text-blue-800" id="statInventaris">732</p>
+          <!-- Password -->
+          <div class="relative">
+            <label for="password" class="block text-gray-700 mb-1">Password</label>
+            <div class="absolute left-3 top-10 text-gray-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0-1.104-.896-2-2-2s-2 .896-2 2 .896 2 2 2 2-.896 2-2zM16 17H8c-1.105 0-2-.895-2-2v-2a2 2 0 012-2h8c1.105 0 2 .895 2 2v2c0 1.105-.895 2-2 2z" />
+              </svg>
             </div>
-            <div class="bg-yellow-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-600">Kendaraan Roda 4</h3>
-              <p class="text-2xl font-bold text-yellow-700" id="statKendaraan">7</p>
-            </div>
-            <div class="bg-green-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-600">Driver</h3>
-              <p class="text-2xl font-bold text-green-700" id="statDriver">3</p>
+            <input type="password" id="password" placeholder="Masukkan password" class="w-full pl-10 pr-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" required />
+            <div class="absolute right-3 top-10 text-gray-400 cursor-pointer" id="togglePassword">
+              <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
             </div>
           </div>
-        </div>
-        <div id="admin-dashboard" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <div class="bg-yellow-100 rounded-xl p-4 shadow">
-            <h3 class="font-bold text-lg">Mutasi Belum Disetujui</h3>
-            <p id="count-mutasi-pending" class="text-3xl font-bold text-yellow-700">0</p>
-          </div>
-          <div class="bg-blue-100 rounded-xl p-4 shadow">
-            <h3 class="font-bold text-lg">Peminjaman Belum Disetujui</h3>
-            <p id="count-peminjaman-pending" class="text-3xl font-bold text-blue-700">0</p>
-          </div>
-          <div class="bg-purple-100 rounded-xl p-4 shadow">
-            <h3 class="font-bold text-lg">Zoom Belum Disetujui</h3>
-            <p id="count-zoom-pending" class="text-3xl font-bold text-purple-700">0</p>
-          </div>
-          <div class="bg-pink-100 rounded-xl p-4 shadow">
-            <h3 class="font-bold text-lg">Grab Belum Disetujui</h3>
-            <p id="count-grab-pending" class="text-3xl font-bold text-pink-700">0</p>
-          </div>
-        </div>
 
-        <!--INVENTARIS-->
-        <div id="inventaris" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
-          <h2 class="text-xl font-semibold mb-4">Data Inventaris</h2>
+          <!-- Tombol -->
+          <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition duration-200">Login</button>
+        </form>
 
-          <!-- Filter & Aksi -->
-          <div class="mb-4 flex flex-col md:flex-row gap-4 flex-wrap">
-            <input type="text" id="filterKodeNama" placeholder="Cari Kode atau Nama Aset..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
-            <select id="filterLokasi" class="border border-gray-300 rounded px-4 py-2">
-              <option value="">Semua Lokasi</option>
-              <option value="Aula">Aula</option>
-              <option value="Ruang Server">Ruang Server</option>
-              <option value="Gudang Dalam">Gudang Dalam</option>
-            </select>
-            <select id="filterKondisi" class="border border-gray-300 rounded px-4 py-2">
-              <option value="">Semua Kondisi</option>
-              <option value="Baik">Baik</option>
-              <option value="Rusak">Rusak</option>
-              <option value="Rusak Berat">Rusak Berat</option>
-            </select>
-            <button onclick="exportTableToExcel('inventarisTable', 'Inventaris')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
-            <button id="btn-tambah-inventaris" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 hidden" onclick="showFormInventaris()">+ Tambah Inventaris</button>
-          </div>
-
-          <!-- Tabel -->
-          <div class="overflow-x-auto">
-            <table id="inventarisTable" class="w-full border border-gray-300 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="border px-4 py-2">Kode</th>
-                  <th class="border px-4 py-2">Nama</th>
-                  <th class="border px-4 py-2">Lokasi</th>
-                  <th class="border px-4 py-2">Kondisi</th>
-                  <th class="border px-4 py-2">Foto</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data akan dirender oleh JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Form Input (Hidden Default) -->
-          <div id="form-inventaris" class="mt-8 border-t pt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Inventaris</h3>
-            <form onsubmit="submitFormInventaris(event)" class="grid gap-4 md:grid-cols-2">
-              <input type="text" id="inv-kode" placeholder="Kode Aset" required class="border px-4 py-2 rounded" />
-              <input type="text" id="inv-nama" placeholder="Nama Aset" required class="border px-4 py-2 rounded" />
-              <select id="inv-lokasi" required class="border px-4 py-2 rounded">
-                <option value="">Pilih Lokasi</option>
-                <option value="Aula">Aula</option>
-                <option value="Ruang Server">Ruang Server</option>
-                <option value="Gudang Dalam">Gudang Dalam</option>
-              </select>
-              <select id="inv-kondisi" required class="border px-4 py-2 rounded">
-                <option value="">Pilih Kondisi</option>
-                <option value="Baik">Baik</option>
-                <option value="Rusak">Rusak</option>
-                <option value="Rusak Berat">Rusak Berat</option>
-              </select>
-              <div class="col-span-2">
-                <label class="block mb-1">Upload Foto</label>
-                <input type="file" id="inv-foto" accept="image/*" class="w-full border px-4 py-2 rounded bg-white" />
-              </div>
-              <div class="col-span-2 flex gap-2">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
-                <button type="button" onclick="batalFormInventaris()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!--MUTASI-->
-        <div id="mutasi" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
-          <h2 class="text-xl font-semibold mb-4">Mutasi Kendaraan & Driver</h2>
-
-          <!-- Filter dan Aksi -->
-          <div class="flex flex-wrap gap-4 items-center mb-4">
-            <input type="text" id="filterMutasiNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
-            <select id="filterMutasiBagian" class="border border-gray-300 rounded px-4 py-2">
-              <option value="">Semua Bagian</option>
-              <option value="SDMUK">SDMUK</option>
-              <option value="PKP">PKP</option>
-              <option value="Yanser">Yanser</option>
-              <option value="Kepser">Kepser</option>
-              <option value="PMU">PMU</option>
-              <option value="Yanfaskes">Yanfaskes</option>
-            </select>
-            <button onclick="exportTableToExcel('mutasiTable', 'Mutasi')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
-            <button onclick="showFormMutasi()" id="btn-tambah-mutasi" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Mutasi</button>
-          </div>
-
-          <!-- Tabel -->
-          <div class="overflow-x-auto">
-            <table id="mutasiTable" class="w-full border border-gray-300 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-2 border">NPP</th>
-                  <th class="px-2 border">Nama</th>
-                  <th class="px-2 border">Bagian</th>
-                  <th class="px-2 border">Tanggal</th>
-                  <th class="px-2 border">Jam Pinjam</th>
-                  <th class="px-2 border">Jam Selesai</th>
-                  <th class="px-2 border">Kendaraan</th>
-                  <th class="px-2 border">Driver</th>
-                  <th class="px-2 border">Tujuan</th>
-                  <th class="px-2 border">Keterangan</th>
-                  <th class="px-2 border">Approval</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data akan dirender oleh JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Form Mutasi -->
-          <div id="form-mutasi" class="mt-8 border-t pt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Mutasi</h3>
-            <form onsubmit="submitFormMutasi(event)" class="grid gap-4 md:grid-cols-2">
-              <input type="text" id="mutasi-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
-              <input type="text" id="mutasi-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
-              <select id="mutasi-bagian" class="border px-4 py-2 rounded" required>
-                <option value="">Pilih Bagian</option>
-                <option value="SDMUK">SDMUK</option>
-                <option value="PKP">PKP</option>
-                <option value="Yanser">Yanser</option>
-                <option value="Kepser">Kepser</option>
-                <option value="PMU">PMU</option>
-                <option value="Yanfaskes">Yanfaskes</option>
-              </select>
-              <input type="date" id="mutasi-tanggal" class="border px-4 py-2 rounded" required />
-              <input type="time" id="mutasi-jamPinjam" placeholder="Jam Pinjam" class="border px-4 py-2 rounded" required />
-              <input type="time" id="mutasi-jamSelesai" placeholder="Jam Selesai" class="border px-4 py-2 rounded" required />
-              <select id="mutasi-kendaraan" class="border px-4 py-2 rounded" required>
-                <option value="">Pilih Kendaraan</option>
-                <option value="Innova G 1366 HH">Innova G 1366 HH</option>
-                <option value="Avanza G 1972 HH">Avanza G 1972 HH</option>
-                <option value="Ertiga G 1532 JH">Ertiga G 1532 JH</option>
-              </select>
-              <select id="mutasi-driver" class="border px-4 py-2 rounded" required>
-                <option value="">Pilih Driver</option>
-                <option value="Lutfi">Lutfi</option>
-                <option value="Trisno">Trisno</option>
-                <option value="Rifki">Rifki</option>
-              </select>
-              <input type="text" id="mutasi-tujuan" placeholder="Tujuan" class="border px-4 py-2 rounded" required />
-              <textarea id="mutasi-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
-              <div class="flex gap-2 md:col-span-2">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
-                <button type="button" onclick="batalFormMutasi()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!--PEMINJAMAN-->
-        <div id="peminjaman" class="page-section hidden bg-white rounded-2xl shadow-lg p-6">
-          <h2 class="text-xl font-semibold mb-4">Peminjaman Ruangan</h2>
-
-          <!-- Filter dan Aksi -->
-          <div class="flex flex-wrap gap-4 items-center mb-4">
-            <input type="text" id="filterPeminjamanNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
-            <select id="filterPeminjamanRuangan" class="border border-gray-300 rounded px-4 py-2">
-              <option value="">Semua Ruangan</option>
-              <option value="Aula">Aula</option>
-              <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
-              <option value="Ruang Kaca">Ruang Kaca</option>
-            </select>
-            <button onclick="exportTableToExcel('peminjamanTable', 'Peminjaman')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
-            <button onclick="showFormPeminjaman()" id="btn-tambah-peminjaman" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Peminjaman</button>
-          </div>
-
-          <!-- Tabel -->
-          <div class="overflow-x-auto">
-            <table id="peminjamanTable" class="w-full border border-gray-300 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-2 border">NPP</th>
-                  <th class="px-2 border">Nama</th>
-                  <th class="px-2 border">Bagian</th>
-                  <th class="px-2 border">Tanggal</th>
-                  <th class="px-2 border">Waktu</th>
-                  <th class="px-2 border">Keterangan</th>
-                  <th class="px-2 border">Ruangan</th>
-                  <th class="px-2 border">Approval</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data akan dirender oleh JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Form Peminjaman -->
-          <div id="form-peminjaman" class="mt-8 border-t pt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Peminjaman</h3>
-            <form onsubmit="submitFormPeminjaman(event)" class="grid gap-4 md:grid-cols-2">
-              <input type="text" id="pinjam-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
-              <input type="text" id="pinjam-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
-              <select id="pinjam-bagian" class="border px-4 py-2 rounded" required>
-                <option value="">Pilih Bagian</option>
-                <option value="SDMUK">SDMUK</option>
-                <option value="PKP">PKP</option>
-                <option value="Yanser">Yanser</option>
-                <option value="Kepser">Kepser</option>
-                <option value="PMU">PMU</option>
-                <option value="Yanfaskes">Yanfaskes</option>
-              </select>
-              <input type="date" id="pinjam-tanggal" class="border px-4 py-2 rounded" required />
-              <input type="time" id="pinjam-waktu" class="border px-4 py-2 rounded" required />
-              <textarea id="pinjam-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
-              <select id="pinjam-ruangan" class="border px-4 py-2 rounded md:col-span-2" required>
-                <option value="">Pilih Ruangan</option>
-                <option value="Aula">Aula</option>
-                <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
-                <option value="Ruang Kaca">Ruang Kaca</option>
-              </select>
-              <div class="flex gap-2 md:col-span-2">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
-                <button type="button" onclick="batalFormPeminjaman()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!--ZOOM-->
-        <div id="zoom" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
-          <h2 class="text-xl font-semibold mb-4">Peminjaman Akun Zoom</h2>
-
-          <!-- Filter dan Aksi -->
-          <div class="flex flex-wrap gap-4 items-center mb-4">
-            <input type="text" id="filterZoomNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
-            <button onclick="exportTableToExcel('zoomTable', 'Zoom')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
-            <button onclick="showFormZoom()" id="btn-tambah-zoom" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Zoom</button>
-          </div>
-
-          <!-- Tabel -->
-          <div class="overflow-x-auto">
-            <table id="zoomTable" class="w-full border border-gray-300 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-2 border">NPP</th>
-                  <th class="px-2 border">Nama</th>
-                  <th class="px-2 border">Bagian</th>
-                  <th class="px-2 border">Tanggal</th>
-                  <th class="px-2 border">Waktu</th>
-                  <th class="px-2 border">Kegiatan</th>
-                  <th class="px-2 border">Akun</th>
-                  <th class="px-2 border">Approval</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data akan dirender oleh JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Form Zoom -->
-          <div id="form-zoom" class="mt-8 border-t pt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Peminjaman Zoom</h3>
-            <form onsubmit="submitFormZoom(event)" class="grid gap-4 md:grid-cols-2">
-              <input type="text" id="zoom-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
-              <input type="text" id="zoom-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
-              <select id="zoom-bagian" class="border px-4 py-2 rounded" required>
-                <option value="">Pilih Bagian</option>
-                <option value="SDMUK">SDMUK</option>
-                <option value="PKP">PKP</option>
-                <option value="Yanser">Yanser</option>
-                <option value="Kepser">Kepser</option>
-                <option value="PMU">PMU</option>
-                <option value="Yanfaskes">Yanfaskes</option>
-              </select>
-              <input type="date" id="zoom-tanggal" class="border px-4 py-2 rounded" required />
-              <input type="time" id="zoom-waktu" class="border px-4 py-2 rounded" required />
-              <input type="text" id="zoom-kegiatan" placeholder="Topik/Kegiatan" class="border px-4 py-2 rounded md:col-span-2" required />
-              <div class="flex gap-2 md:col-span-2">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
-                <button type="button" onclick="batalFormZoom()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!--GRAB-->
-        <div id="grab" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
-          <h2 class="text-xl font-semibold mb-4">Pemesanan Grab</h2>
-
-          <!-- Filter dan Aksi -->
-          <div class="flex flex-wrap gap-4 items-center mb-4">
-            <input type="text" id="filterGrabNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
-            <button onclick="exportTableToExcel('grabTable', 'Grab')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
-            <button onclick="showFormGrab()" id="btn-tambah-grab" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Grab</button>
-          </div>
-
-          <!-- Tabel -->
-          <div class="overflow-x-auto">
-            <table id="grabTable" class="w-full border border-gray-300 text-sm">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-2 border">NPP</th>
-                  <th class="px-2 border">Nama</th>
-                  <th class="px-2 border">Tanggal</th>
-                  <th class="px-2 border">Jam</th>
-                  <th class="px-2 border">Tujuan</th>
-                  <th class="px-2 border">Keterangan</th>
-                  <th class="px-2 border">Kode</th>
-                  <th class="px-2 border">Approval</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Data akan dirender oleh JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Form Grab -->
-          <div id="form-grab" class="mt-8 border-t pt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Grab</h3>
-            <form onsubmit="submitFormGrab(event)" class="grid gap-4 md:grid-cols-2">
-              <input type="text" id="grab-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
-              <input type="text" id="grab-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
-              <input type="date" id="grab-tanggal" class="border px-4 py-2 rounded" required />
-              <input type="time" id="grab-jam" placeholder="Jam" class="border px-4 py-2 rounded" required />
-              <input type="text" id="grab-tujuan" plabceholder="Tujuan" class="border px-4 py-2 rounded" required />
-              <textarea id="grab-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
-              <div class="flex gap-2 md:col-span-2">
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
-                <button type="button" onclick="batalFormGrab()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </main>
+        <p class="text-sm text-center text-gray-500 mt-4">username: <b>user</b> / password: <b>user123</b></p>
+        <p class="text-sm text-center text-gray-500 mt-4">Apabila terdapat kendala dapat menghubungi Bagian SDMUK</p>
+      </div>
     </div>
-    <footer class="mt-auto text-center text-sm text-gray-500 py-4 w-full border-t border-gray-200 bg-white">© 2025 SIBABE by SDMUK</footer>
+    <footer class="text-center text-sm text-gray-500 py-4 w-full border-t border-gray-200">© 2025 SIBABE by SDMUK</footer>
 
+    <script>
+      document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        try {
+          const res = await fetch('api/login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, password }),
+          });
+
+          const result = await res.json();
+
+          if (result.success) {
+            window.location.href = 'index.html'; // redirect berhasil jika login sukses
+          } else {
+            showToast('Sik, ono sing salah kayae', 'error');
+          }
+        } catch (err) {
+          showToast('Server tidak dapat dihubungi!', 'error');
+        }
+      });
+
+      // ========== SHOW PASSWORD IKON MATA ===========
+      document.getElementById('togglePassword').addEventListener('click', function () {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        const isPassword = passwordInput.type === 'password';
+
+        passwordInput.type = isPassword ? 'text' : 'password';
+
+        // Optional: ubah icon mata ke mata dicoret
+        eyeIcon.innerHTML = isPassword
+          ? `<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.056 10.056 0 011.658-3.043M6.36 6.36A9.969 9.969 0 0112 5c4.478 0 8.268 2.943 9.542 7a9.965 9.965 0 01-4.185 5.116M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+       <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />`
+          : `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+       <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+      });
+
+      function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-5 right-5 z-50 px-4 py-3 rounded shadow-lg text-white text-sm animate-fade-in-out ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+    </script>
     <script src="aset-app.js"></script>
   </body>
 </html>
