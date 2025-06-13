@@ -1,820 +1,857 @@
-// aset-app.js (versi final dengan render dan approval tersimpan)
+const API_BASE = 'api';
+let isAdmin = false;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const role = localStorage.getItem("role");
-  if (!role) {
-    window.location.href = "login.html";
+// ======================== SESSION ==========================
+async function checkSession() {
+  try {
+    const res = await fetch('api/session.php', { credentials: 'include' });
+    const session = await res.json();
+    console.log('🧾 Session response:', session);
+
+    if (!session.isLoggedIn) {
+      window.location.href = 'login.html';
+      return false;
+    }
+
+    isAdmin = session.role === 'admin';
+    const greetingEl = document.getElementById('greeting');
+    if (greetingEl) {
+      const jam = new Date().getHours();
+      let waktu = 'selamat malam';
+      if (jam >= 4 && jam < 12) waktu = 'selamat pagi';
+      else if (jam >= 12 && jam < 15) waktu = 'selamat siang';
+      else if (jam >= 15 && jam < 18) waktu = 'selamat sore';
+      greetingEl.textContent = `Halo, ${waktu}, Anda login sebagai ${isAdmin ? 'admin' : 'user'}.`;
+    }
+
+    if (isAdmin) {
+      document.getElementById('admin-dashboard')?.classList.remove('hidden');
+      document.getElementById('btn-tambah-inventaris')?.classList.remove('hidden');
+      document.getElementById('reset-data-link')?.classList.remove('hidden');
+    }
+
+    return true;
+  } catch (err) {
+    console.error('❗ Gagal ambil session', err);
+    window.location.href = 'login.html';
+    return false;
+  }
+}
+
+async function updateStatistik() {
+  const inv = await fetchData('inventaris');
+  const mutasi = await fetchData('mutasi');
+  const pinjam = await fetchData('peminjaman');
+  const zoom = await fetchData('zoom');
+  const grab = await fetchData('grab');
+
+  document.getElementById('statInventaris').textContent = inv.length;
+  document.getElementById('count-mutasi-pending').textContent = mutasi.filter((item) => !item.approval).length;
+  document.getElementById('count-peminjaman-pending').textContent = pinjam.filter((item) => !item.approval).length;
+  document.getElementById('count-zoom-pending').textContent = zoom.filter((item) => !item.approval).length;
+  document.getElementById('count-grab-pending').textContent = grab.filter((item) => !item.approval).length;
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+
+  const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+  if (isOpen) {
+    // Tutup sidebar
+    sidebar.classList.add('-translate-x-full');
+    backdrop.classList.add('hidden');
+  } else {
+    // Buka sidebar
+    sidebar.classList.remove('-translate-x-full');
+    backdrop.classList.remove('hidden');
+  }
+}
+
+function logout() {
+  fetch(`${API_BASE}/logout.php`, {
+    method: 'POST',
+    credentials: 'include',
+  }).then(() => {
+    window.location.href = 'login.html';
+  });
+}
+
+// ============= NAVIGASI =============
+function setupNavigation() {
+  console.log('setupNavigation aktif');
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = link.dataset.target;
+      console.log(`Navigasi ke: ${target}`);
+      if (target) showSection(target);
+      document.querySelectorAll('.nav-link').forEach((l) => l.classList.remove('bg-gray-200'));
+      link.classList.add('bg-gray-200');
+      if (window.innerWidth < 768) toggleSidebar();
+    });
+  });
+}
+
+function showSection(id) {
+  // Sembunyikan semua section
+  document.querySelectorAll('.page-section').forEach((sec) => {
+    sec.classList.add('hidden');
+  });
+
+  // Tampilkan section yang sesuai ID
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.remove('hidden');
+  } else {
+    console.warn(`Section dengan ID ${id} tidak ditemukan.`);
+  }
+
+  // Tampilkan dashboard admin jika di home
+  const dashboard = document.getElementById('admin-dashboard');
+  if (id === 'home' && isAdmin && dashboard) {
+    dashboard.classList.remove('hidden');
+  } else if (dashboard) {
+    dashboard.classList.add('hidden');
+  }
+}
+
+// ============== FETCH UTILS ==============
+async function fetchData(endpoint) {
+  try {
+    const res = await fetch(`${API_BASE}/${endpoint}.php`, {
+      credentials: 'include',
+    });
+    return await res.json();
+  } catch (e) {
+    showToast(`Gagal ambil data ${endpoint}`, 'error');
+    return [];
+  }
+}
+
+async function postData(endpoint, data) {
+  return fetch(`${API_BASE}/${endpoint}.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    credentials: 'include',
+  });
+}
+
+async function putData(endpoint, id, data) {
+  return fetch(`${API_BASE}/${endpoint}.php?id=${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+    credentials: 'include',
+  });
+}
+
+async function deleteData(endpoint, id) {
+  return fetch(`${API_BASE}/${endpoint}.php?id=${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+}
+
+// ======================== HAPUS ALL ========================
+function resetAllData() {
+  if (!confirm('Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan.')) return;
+
+  fetch('api/reset.php', {
+    method: 'POST',
+    credentials: 'include',
+  })
+    .then((res) => res.json())
+    .then((result) => {
+      if (result.success) {
+        showToast('Semua data berhasil dihapus.', 'green');
+        renderAllTables(); // Render ulang semua tabel kosong
+        updateStatistik(); // Reset statistik ke 0
+      } else {
+        showToast('Gagal menghapus data.', 'red');
+      }
+    })
+    .catch((err) => {
+      console.error('Reset error:', err);
+      showToast('Terjadi kesalahan saat reset data.', 'red');
+    });
+}
+
+// ======================== EXPORT TO EXCEL ==========================
+function exportTableToExcel(tableId, filename = '') {
+  const table = document.getElementById(tableId);
+  const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet1' });
+  XLSX.writeFile(wb, `${filename}.xlsx`);
+}
+
+// ======================== TOAST ==========================
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `fixed top-5 right-5 z-50 px-4 py-3 rounded shadow-lg text-white text-sm animate-fade-in-out ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ======================== INVENTARIS ==========================
+async function renderInventarisTable() {
+  const data = await fetchData('inventaris');
+  const tbody = document.querySelector('#inventarisTable tbody');
+  tbody.innerHTML = '';
+
+  const namaFilter = document.getElementById('filterKodeNama').value.toLowerCase();
+  const lokasiFilter = document.getElementById('filterLokasi').value;
+  const kondisiFilter = document.getElementById('filterKondisi').value;
+
+  const filtered = data.filter(
+    (item) => (!namaFilter || item.kode.toLowerCase().includes(namaFilter) || item.nama.toLowerCase().includes(namaFilter)) && (!lokasiFilter || item.lokasi === lokasiFilter) && (!kondisiFilter || item.kondisi === kondisiFilter)
+  );
+
+  for (const item of filtered) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="border px-2 py-1">${item.kode}</td>
+      <td class="border px-2 py-1">${item.nama}</td>
+      <td class="border px-2 py-1">${item.lokasi}</td>
+      <td class="border px-2 py-1">${item.kondisi}</td>
+      <td class="border px-2 py-1"><img src="${item.foto || 'default.png'}" alt="foto" class="w-12 h-12 object-cover"></td>
+      <td class="border px-2 py-1">
+        ${
+          isAdmin
+            ? `
+          <button onclick="editInventaris('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded mr-1">Edit</button>
+          <button onclick="hapusInventaris('${item.id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">Hapus</button>
+        `
+            : '-'
+        }
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function showFormInventaris() {
+  document.getElementById('form-inventaris').classList.remove('hidden');
+  document.getElementById('inv-kode').value = '';
+  document.getElementById('inv-nama').value = '';
+  document.getElementById('inv-lokasi').value = '';
+  document.getElementById('inv-kondisi').value = '';
+  document.getElementById('inv-foto').value = '';
+  document.getElementById('form-inventaris').dataset.editing = '';
+}
+
+function batalFormInventaris() {
+  document.getElementById('form-inventaris').classList.add('hidden');
+  document.getElementById('form-inventaris').reset();
+}
+
+async function submitFormInventaris(e) {
+  e.preventDefault();
+  const kode = document.getElementById('inv-kode').value.trim();
+  const nama = document.getElementById('inv-nama').value.trim();
+  const lokasi = document.getElementById('inv-lokasi').value;
+  const kondisi = document.getElementById('inv-kondisi').value;
+  const fotoInput = document.getElementById('inv-foto');
+  const editingId = document.getElementById('form-inventaris').dataset.editing;
+
+  const formData = new FormData();
+  formData.append('kode', kode);
+  formData.append('nama', nama);
+  formData.append('lokasi', lokasi);
+  formData.append('kondisi', kondisi);
+  if (fotoInput.files[0]) formData.append('foto', fotoInput.files[0]);
+
+  const url = editingId ? `${API_BASE}/inventaris.php?id=${editingId}` : `${API_BASE}/inventaris.php`;
+  const method = editingId ? 'POST' : 'POST';
+
+  const response = await fetch(url, {
+    method,
+    body: formData,
+    credentials: 'include',
+  });
+
+  const result = await response.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    batalFormInventaris();
+    renderInventarisTable();
+  }
+}
+
+async function editInventaris(id) {
+  const data = await fetchData('inventaris');
+  const item = data.find((d) => d.id === id);
+  if (!item) return;
+
+  document.getElementById('form-inventaris').classList.remove('hidden');
+  document.getElementById('inv-kode').value = item.kode;
+  document.getElementById('inv-nama').value = item.nama;
+  document.getElementById('inv-lokasi').value = item.lokasi;
+  document.getElementById('inv-kondisi').value = item.kondisi;
+  document.getElementById('form-inventaris').dataset.editing = item.id;
+}
+
+async function hapusInventaris(id) {
+  if (!confirm('Yakin ingin menghapus item ini?')) return;
+  const res = await deleteData('inventaris', id);
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderInventarisTable();
+}
+
+// Filter live
+document.getElementById('filterKodeNama').addEventListener('input', renderInventarisTable);
+document.getElementById('filterLokasi').addEventListener('change', renderInventarisTable);
+document.getElementById('filterKondisi').addEventListener('change', renderInventarisTable);
+
+// ======================== MUTASI ==========================
+async function renderMutasiTable() {
+  const data = await fetchData('mutasi');
+  const tbody = document.querySelector('#mutasiTable tbody');
+  tbody.innerHTML = '';
+
+  const namaFilter = document.getElementById('filterMutasiNama').value.toLowerCase();
+  const bagianFilter = document.getElementById('filterMutasiBagian').value;
+
+  const filtered = data.filter((item) => (!namaFilter || item.nama.toLowerCase().includes(namaFilter)) && (!bagianFilter || item.bagian === bagianFilter));
+
+  for (const item of filtered) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="border px-2">${item.npp}</td>
+      <td class="border px-2">${item.nama}</td>
+      <td class="border px-2">${item.bagian}</td>
+      <td class="border px-2">${item.tanggal}</td>
+      <td class="border px-2">${item.jam_pinjam}</td>
+      <td class="border px-2">${item.jam_selesai}</td>
+      <td class="border px-2">${item.kendaraan}</td>
+      <td class="border px-2">${item.driver}</td>
+      <td class="border px-2">${item.tujuan}</td>
+      <td class="border px-2">${item.keterangan}</td>
+      <td class="border px-2">${item.approval ? '✅Disetujui' : isAdmin ? `<button onclick="approveMutasi('${item.id}')" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">Setujui</button>` : '⏳Menunggu'}</td>
+      <td class="border px-2">
+        ${
+          isAdmin
+            ? `
+          <button onclick="editMutasi('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded mr-1">Edit</button>
+          <button onclick="hapusMutasi('${item.id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">Hapus</button>
+        `
+            : '-'
+        }
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function showFormMutasi() {
+  document.getElementById('form-mutasi').classList.remove('hidden');
+  document.getElementById('form-mutasi').dataset.editing = '';
+  document.querySelectorAll('#form-mutasi input, #form-mutasi select, #form-mutasi textarea').forEach((el) => (el.value = ''));
+}
+
+function batalFormMutasi() {
+  document.getElementById('form-mutasi').classList.add('hidden');
+  document.getElementById('form-mutasi').dataset.editing = '';
+}
+
+async function submitFormMutasi(e) {
+  e.preventDefault();
+  const id = document.getElementById('form-mutasi').dataset.editing;
+  const data = {
+    npp: document.getElementById('mutasi-npp').value.trim(),
+    nama: document.getElementById('mutasi-nama').value.trim(),
+    bagian: document.getElementById('mutasi-bagian').value,
+    tanggal: document.getElementById('mutasi-tanggal').value,
+    jam_pinjam: document.getElementById('mutasi-jamPinjam').value,
+    jam_selesai: document.getElementById('mutasi-jamSelesai').value,
+    kendaraan: document.getElementById('mutasi-kendaraan').value,
+    driver: document.getElementById('mutasi-driver').value,
+    tujuan: document.getElementById('mutasi-tujuan').value,
+    keterangan: document.getElementById('mutasi-keterangan').value,
+  };
+
+  const res = id ? await putData('mutasi', id, data) : await postData('mutasi', data);
+  const result = await res.json();
+
+  showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    batalFormMutasi();
+    renderMutasiTable();
+  }
+}
+
+async function editMutasi(id) {
+  const data = await fetchData('mutasi');
+  const item = data.find((i) => i.id === id);
+  if (!item) return;
+
+  document.getElementById('form-mutasi').classList.remove('hidden');
+  document.getElementById('form-mutasi').dataset.editing = id;
+
+  document.getElementById('mutasi-npp').value = item.npp;
+  document.getElementById('mutasi-nama').value = item.nama;
+  document.getElementById('mutasi-bagian').value = item.bagian;
+  document.getElementById('mutasi-tanggal').value = item.tanggal;
+  document.getElementById('mutasi-jamPinjam').value = item.jam_pinjam;
+  document.getElementById('mutasi-jamSelesai').value = item.jam_selesai;
+  document.getElementById('mutasi-kendaraan').value = item.kendaraan;
+  document.getElementById('mutasi-driver').value = item.driver;
+  document.getElementById('mutasi-tujuan').value = item.tujuan;
+  document.getElementById('mutasi-keterangan').value = item.keterangan;
+}
+
+async function hapusMutasi(id) {
+  if (!confirm('Yakin ingin menghapus data ini?')) return;
+  const res = await deleteData('mutasi', id);
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderMutasiTable();
+}
+
+async function approveMutasi(id) {
+  const res = await fetch(`${API_BASE}/mutasi.php?id=${id}&approve=true`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderMutasiTable();
+}
+
+// Filter
+document.getElementById('filterMutasiNama').addEventListener('input', renderMutasiTable);
+document.getElementById('filterMutasiBagian').addEventListener('change', renderMutasiTable);
+
+// ======================== PEMINJAMAN ==========================
+async function renderPeminjamanTable() {
+  const data = await fetchData('peminjaman');
+  const tbody = document.querySelector('#peminjamanTable tbody');
+  tbody.innerHTML = '';
+
+  const namaFilter = document.getElementById('filterPeminjamanNama').value.toLowerCase();
+  const ruangFilter = document.getElementById('filterPeminjamanRuangan').value;
+
+  const filtered = data.filter((item) => (!namaFilter || item.nama.toLowerCase().includes(namaFilter)) && (!ruangFilter || item.ruangan === ruangFilter));
+
+  for (const item of filtered) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="border px-2">${item.npp}</td>
+      <td class="border px-2">${item.nama}</td>
+      <td class="border px-2">${item.bagian}</td>
+      <td class="border px-2">${item.tanggal}</td>
+      <td class="border px-2">${item.waktu}</td>
+      <td class="border px-2">${item.keterangan}</td>
+      <td class="border px-2">${item.ruangan}</td>
+      <td class="border px-2">${item.approval ? '✅Disetujui' : isAdmin ? `<button onclick="approvePeminjaman('${item.id}')" class="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">Setujui</button>` : '⏳Menunggu'}</td>
+      <td class="border px-2">
+        ${
+          isAdmin
+            ? `
+          <button onclick="editPeminjaman('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded mr-1">Edit</button>
+          <button onclick="hapusPeminjaman('${item.id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">Hapus</button>
+        `
+            : '-'
+        }
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function showFormPeminjaman() {
+  document.getElementById('form-peminjaman').classList.remove('hidden');
+  document.getElementById('form-peminjaman').dataset.editing = '';
+  document.querySelectorAll('#form-peminjaman input, #form-peminjaman select, #form-peminjaman textarea').forEach((el) => (el.value = ''));
+}
+
+function batalFormPeminjaman() {
+  document.getElementById('form-peminjaman').classList.add('hidden');
+  document.getElementById('form-peminjaman').dataset.editing = '';
+}
+
+async function submitFormPeminjaman(e) {
+  e.preventDefault();
+  const id = document.getElementById('form-peminjaman').dataset.editing;
+  const data = {
+    npp: document.getElementById('pinjam-npp').value.trim(),
+    nama: document.getElementById('pinjam-nama').value.trim(),
+    bagian: document.getElementById('pinjam-bagian').value,
+    tanggal: document.getElementById('pinjam-tanggal').value,
+    waktu: document.getElementById('pinjam-waktu').value,
+    keterangan: document.getElementById('pinjam-keterangan').value,
+    ruangan: document.getElementById('pinjam-ruangan').value,
+  };
+
+  const res = id ? await putData('peminjaman', id, data) : await postData('peminjaman', data);
+  const result = await res.json();
+
+  showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    batalFormPeminjaman();
+    renderPeminjamanTable();
+  }
+}
+
+async function editPeminjaman(id) {
+  const data = await fetchData('peminjaman');
+  const item = data.find((i) => i.id === id);
+  if (!item) return;
+
+  document.getElementById('form-peminjaman').classList.remove('hidden');
+  document.getElementById('form-peminjaman').dataset.editing = id;
+
+  document.getElementById('pinjam-npp').value = item.npp;
+  document.getElementById('pinjam-nama').value = item.nama;
+  document.getElementById('pinjam-bagian').value = item.bagian;
+  document.getElementById('pinjam-tanggal').value = item.tanggal;
+  document.getElementById('pinjam-waktu').value = item.waktu;
+  document.getElementById('pinjam-keterangan').value = item.keterangan;
+  document.getElementById('pinjam-ruangan').value = item.ruangan;
+}
+
+async function hapusPeminjaman(id) {
+  if (!confirm('Yakin ingin menghapus data ini?')) return;
+  const res = await deleteData('peminjaman', id);
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderPeminjamanTable();
+}
+
+async function approvePeminjaman(id) {
+  const res = await fetch(`${API_BASE}/peminjaman.php?id=${id}&approve=true`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderPeminjamanTable();
+}
+
+// Filter
+document.getElementById('filterPeminjamanNama').addEventListener('input', renderPeminjamanTable);
+document.getElementById('filterPeminjamanRuangan').addEventListener('change', renderPeminjamanTable);
+
+// ======================== ZOOM ==========================
+async function renderZoomTable() {
+  const data = await fetchData('zoom');
+  const tbody = document.querySelector('#zoomTable tbody');
+  tbody.innerHTML = '';
+
+  const namaFilter = document.getElementById('filterZoomNama').value.toLowerCase();
+
+  const filtered = data.filter((item) => !namaFilter || item.nama.toLowerCase().includes(namaFilter));
+
+  for (const item of filtered) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="border px-2">${item.npp}</td>
+      <td class="border px-2">${item.nama}</td>
+      <td class="border px-2">${item.bagian}</td>
+      <td class="border px-2">${item.tanggal}</td>
+      <td class="border px-2">${item.waktu}</td>
+      <td class="border px-2">${item.kegiatan}</td>
+      <td class="border px-2">${item.akun || '-'}</td>
+      <td class="border px-2">
+        ${
+          item.approval
+            ? '✅Disetujui'
+            : isAdmin
+            ? `<input class="border text-xs w-28" placeholder="Akun Zoom" 
+                    onchange="setAkunZoom('${item.id}', this.value)" 
+                    value="${akunZoomMap[item.id] || ''}">
+                <button onclick="approveZoom('${item.id}')" class="ml-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">✔</button>`
+            : '⏳Menunggu'
+        }
+      </td>
+      <td class="border px-2">
+        ${
+          isAdmin
+            ? `
+          <button onclick="editZoom('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded mr-1">Edit</button>
+          <button onclick="hapusZoom('${item.id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">Hapus</button>
+        `
+            : '-'
+        }
+      </td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+function showFormZoom() {
+  document.getElementById('form-zoom').classList.remove('hidden');
+  document.getElementById('form-zoom').dataset.editing = '';
+  document.querySelectorAll('#form-zoom input, #form-zoom select').forEach((el) => (el.value = ''));
+}
+
+function batalFormZoom() {
+  document.getElementById('form-zoom').classList.add('hidden');
+  document.getElementById('form-zoom').dataset.editing = '';
+}
+
+async function submitFormZoom(e) {
+  e.preventDefault();
+  const id = document.getElementById('form-zoom').dataset.editing;
+  const data = {
+    npp: document.getElementById('zoom-npp').value.trim(),
+    nama: document.getElementById('zoom-nama').value.trim(),
+    bagian: document.getElementById('zoom-bagian').value,
+    tanggal: document.getElementById('zoom-tanggal').value,
+    waktu: document.getElementById('zoom-waktu').value,
+    kegiatan: document.getElementById('zoom-kegiatan').value,
+  };
+
+  const res = id ? await putData('zoom', id, data) : await postData('zoom', data);
+  const result = await res.json();
+
+  showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    batalFormZoom();
+    renderZoomTable();
+  }
+}
+
+async function editZoom(id) {
+  const data = await fetchData('zoom');
+  const item = data.find((i) => i.id === id);
+  if (!item) return;
+
+  document.getElementById('form-zoom').classList.remove('hidden');
+  document.getElementById('form-zoom').dataset.editing = id;
+
+  document.getElementById('zoom-npp').value = item.npp;
+  document.getElementById('zoom-nama').value = item.nama;
+  document.getElementById('zoom-bagian').value = item.bagian;
+  document.getElementById('zoom-tanggal').value = item.tanggal;
+  document.getElementById('zoom-waktu').value = item.waktu;
+  document.getElementById('zoom-kegiatan').value = item.kegiatan;
+}
+
+async function hapusZoom(id) {
+  if (!confirm('Yakin ingin menghapus data ini?')) return;
+  const res = await deleteData('zoom', id);
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderZoomTable();
+}
+
+const akunZoomMap = {};
+
+function setAkunZoom(id, value) {
+  akunZoomMap[id] = value;
+}
+
+async function approveZoom(id) {
+  const akun = (akunZoomMap[id] || '').trim();
+  if (!akun) {
+    showToast('Akun Zoom harus diisi sebelum menyetujui.', 'error');
     return;
   }
 
-  const isAdmin = role === "admin";
-  renderInventaris();
-  const categories = ["inventaris", "mutasi", "peminjaman", "zoom", "grab"];
-  categories.forEach((key) => {
-    if (!localStorage.getItem(key)) localStorage.setItem(key, "[]");
+  const res = await fetch(`${API_BASE}/zoom.php?id=${id}&approve=true`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ akun }),
   });
 
-  function simpanData(key, newData) {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    data.push(newData);
-    localStorage.setItem(key, JSON.stringify(data));
-  }
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderZoomTable();
+}
 
-  window.setujuData = function (key, index) {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const item = data[index];
+// Filter
+document.getElementById('filterZoomNama').addEventListener('input', renderZoomTable);
 
-    // ✅ Validasi khusus untuk Zoom
-    if (key === "zoom" && (!item.akun || item.akun === "-")) {
-      Swal.fire({
-        icon: "warning",
-        title: "Akun Zoom belum diisi",
-        text: "Silakan isi akun Zoom terlebih dahulu sebelum menyetujui.",
-      });
-      return;
-    }
+// ======================== GRAB ==========================
+async function renderGrabTable() {
+  const data = await fetchData('grab');
+  const tbody = document.querySelector('#grabTable tbody');
+  tbody.innerHTML = '';
 
-    // ✅ Validasi khusus untuk Grab
-    if (key === "grab" && (!item.kode || item.kode === "-")) {
-      Swal.fire({
-        icon: "warning",
-        title: "Kode Grab belum diisi",
-        text: "Silakan isi kode Grab terlebih dahulu sebelum menyetujui.",
-      });
-      return;
-    }
+  const namaFilter = document.getElementById('filterGrabNama').value.toLowerCase();
 
-    item.approval = true;
-    localStorage.setItem(key, JSON.stringify(data));
-    showToast("Permintaan disetujui!", "success");
+  const filtered = data.filter((item) => !namaFilter || item.nama.toLowerCase().includes(namaFilter));
 
-    if (key === "mutasi") renderMutasi();
-    else if (key === "peminjaman") renderPeminjaman();
-    else if (key === "zoom") renderZoom();
-    else if (key === "grab") renderGrab();
-  };
-
-  window.hapusData = function (key, index) {
-    Swal.fire({
-      title: "Tenane meh dihapus?",
-      text: "Rak bakal iso balikan loh!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e3342f",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Ya, hapus!",
-      cancelButtonText: "Batal",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const data = JSON.parse(localStorage.getItem(key) || "[]");
-        data.splice(index, 1);
-        localStorage.setItem(key, JSON.stringify(data));
-        showToast("Data berhasil dihapus!", "success");
-
-        if (key === "inventaris") renderInventaris();
-        else if (key === "mutasi") renderMutasi();
-        else if (key === "peminjaman") renderPeminjaman();
-        else if (key === "zoom") renderZoom();
-        else if (key === "grab") renderGrab();
-      }
-    });
-  };
-
-  function bukaFormBaru(formId, prefix) {
-    window.currentEditKey = null;
-    window.currentEditIndex = null;
-    if (typeof resetForm === "function") resetForm(prefix);
-    if (typeof showForm === "function") showForm(formId);
-  }
-
-  function batalInput(prefix, modul) {
-    resetForm(prefix);
-    window.currentEditKey = null;
-    window.currentEditIndex = null;
-    showForm(modul);
-  }
-
-  window.resetSeluruhData = function () {
-    if (getUserRole() !== "admin") {
-      showToast("Hanya admin yang dapat menghapus semua data.");
-      return;
-    }
-
-    // 🔍 Cek apakah ada data Zoom yang belum isi akun
-    const zoomData = JSON.parse(localStorage.getItem("zoom") || "[]");
-    const zoomBelumIsi = zoomData.some(
-      (item) => !item.akun || item.akun === "-"
-    );
-
-    // 🔍 Cek apakah ada data Grab yang belum isi kode
-    const grabData = JSON.parse(localStorage.getItem("grab") || "[]");
-    const grabBelumIsi = grabData.some(
-      (item) => !item.kode || item.kode === "-"
-    );
-
-    if (zoomBelumIsi || grabBelumIsi) {
-      Swal.fire({
-        icon: "warning",
-        title: "Data belum lengkap",
-        html: `
+  for (const item of filtered) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="border px-2">${item.npp}</td>
+      <td class="border px-2">${item.nama}</td>
+      <td class="border px-2">${item.tanggal}</td>
+      <td class="border px-2">${item.jam}</td>
+      <td class="border px-2">${item.tujuan}</td>
+      <td class="border px-2">${item.keterangan}</td>
+      <td class="border px-2">${item.kode || '-'}</td>
+      <td class="border px-2">
         ${
-          zoomBelumIsi
-            ? "Masih ada peminjaman Zoom yang belum mengisi akun Zoom.<br>"
-            : ""
+          item.kode ||
+          (isAdmin && !item.approval
+            ? `
+            <input class="border text-xs px-1 w-28" placeholder="Kode Grab" 
+            onchange="setKodeGrab('${item.id}', this.value)" 
+            value="${kodeGrabMap[item.id] || ''}">`
+            : '-')
         }
+      </td>
+      <td class="border px-2">
         ${
-          grabBelumIsi
-            ? "Masih ada pemesanan Grab yang belum mengisi kode Grab.<br>"
-            : ""
+          item.approval
+            ? '✅Disetujui'
+            : isAdmin
+            ? `
+            <button onclick="approveGrab('${item.id}')" class="ml-1 bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">✔</button>
+        `
+            : '⏳Menunggu'
         }
-        Silakan lengkapi data terlebih dahulu sebelum mereset semua data.
-      `,
-      });
-      return;
-    }
-
-    // Konfirmasi penghapusan
-    Swal.fire({
-      title: "Tenane meh dihapus kabeh?",
-      text: "Ibarate koyo mantan, yen wis ilang ora bakal iso mbalik lo!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e3342f",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Ya, hapus semua!",
-      cancelButtonText: "Batal",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        localStorage.clear();
-        showToast("Semua data berhasil dihapus!");
-        location.reload();
-      }
-    });
-  };
-
-  function ambilNilaiForm(ids) {
-    const hasil = {};
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      hasil[id] = el ? el.value : "";
-    });
-    return hasil;
-  }
-
-  // ==================== FORM SUBMIT ==================== //
-
-  window.submitFormInventaris = function () {
-    const kode = document.getElementById("inv-kode").value.trim();
-    const nama = document.getElementById("inv-nama").value.trim();
-    const lokasi = document.getElementById("inv-lokasi").value;
-    const kondisi = document.getElementById("inv-kondisi").value;
-    const fotoInput = document.getElementById("inv-foto");
-
-    // Validasi field kosong
-    if (!kode) return showToast("Kode aset kudune diisi!", "error");
-    if (!nama) return showToast("Nama aset diisi sik to ya!", "error");
-    if (!lokasi) return showToast("Lokasi asete ning ndi bolo?", "error");
-    if (!kondisi) return showToast("Kondisie pi jal?", "error");
-
-    // Validasi upload foto hanya saat tambah data baru
-    const isEdit =
-      window.currentEditKey === "inventaris" &&
-      window.currentEditIndex !== undefined;
-    if (!isEdit && fotoInput.files.length === 0)
-      return showToast("PAP Sik", "error");
-
-    // Untuk edit: ambil data lama dan update
-    if (isEdit) {
-      const data = JSON.parse(localStorage.getItem("inventaris") || "[]");
-      const item = data[window.currentEditIndex];
-      item.kode = kode;
-      item.nama = nama;
-      item.lokasi = lokasi;
-      item.kondisi = kondisi;
-
-      if (all.some((item) => item.kode === kode)) {
-        return showToast("Kode aset sudah digunakan!", "error");
-      }
-
-      // Jika admin upload ulang foto saat edit
-      if (fotoInput.files.length > 0) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          item.foto = reader.result;
-          localStorage.setItem("inventaris", JSON.stringify(data));
-          showToast("Data inventaris diperbarui!");
-          renderInventaris();
-          showForm("inventaris");
-          window.currentEditKey = null;
-          window.currentEditIndex = null;
-        };
-        reader.readAsDataURL(fotoInput.files[0]);
-      } else {
-        localStorage.setItem("inventaris", JSON.stringify(data));
-        showToast("Data inventaris diperbarui!");
-        renderInventaris();
-        showForm("inventaris");
-        window.currentEditKey = null;
-        window.currentEditIndex = null;
-      }
-      return;
-    }
-
-    // Tambah data baru
-    const reader = new FileReader();
-    reader.onload = () => {
-      const newData = { kode, nama, lokasi, kondisi, foto: reader.result };
-      simpanData("inventaris", newData);
-      showToast("Data inventaris disimpan!");
-      renderInventaris();
-      showForm("inventaris");
-      resetForm("inv"); // Memanggil fungsi reset yang sudah ada
-    };
-    reader.readAsDataURL(fotoInput.files[0]);
-  };
-
-  window.submitFormMutasi = function () {
-    const oldSubmitMutasi = window.submitFormMutasi;
-    const data = ambilNilaiForm([
-      "mutasi-npp",
-      "mutasi-nama",
-      "mutasi-bagian",
-      "mutasi-tanggal",
-      "mutasi-jamPinjam",
-      "mutasi-jamSelesai",
-      "mutasi-kendaraan",
-      "mutasi-driver",
-      "mutasi-tujuan",
-      "mutasi-keterangan",
-    ]);
-
-    // Validasi field kosong
-    if (fieldKosong(data, Object.keys(data))) return;
-
-    const isEdit =
-      window.currentEditKey === "mutasi" &&
-      window.currentEditIndex !== undefined;
-
-    if (isEdit) {
-      const allData = JSON.parse(localStorage.getItem("mutasi") || "[]");
-      allData[window.currentEditIndex] = { ...data, approval: false };
-      localStorage.setItem("mutasi", JSON.stringify(allData));
-      showToast("Data mutasi diperbarui!");
-      renderMutasi();
-      showForm("mutasi");
-      window.currentEditKey = null;
-      window.currentEditIndex = null;
-      resetForm("mutasi");
-      return;
-    }
-
-    // Tambah data baru
-    data.approval = false;
-    simpanData("mutasi", data);
-    showToast("Data mutasi disimpan!");
-    renderMutasi();
-    showForm("mutasi");
-    resetForm("mutasi");
-  };
-
-  window.submitFormPeminjaman = function () {
-    const data = ambilNilaiForm([
-      "pinjam-npp",
-      "pinjam-nama",
-      "pinjam-bagian",
-      "pinjam-tanggal",
-      "pinjam-waktu",
-      "pinjam-keterangan",
-      "pinjam-ruangan",
-    ]);
-
-    if (fieldKosong(data, Object.keys(data))) return;
-
-    const isEdit =
-      window.currentEditKey === "peminjaman" &&
-      window.currentEditIndex !== undefined;
-    if (isEdit) {
-      const all = JSON.parse(localStorage.getItem("peminjaman") || "[]");
-      all[window.currentEditIndex] = { ...data, approval: false };
-      localStorage.setItem("peminjaman", JSON.stringify(all));
-      showToast("Data peminjaman diperbarui!");
-      renderPeminjaman();
-      showForm("peminjaman");
-      resetForm("pinjam");
-      window.currentEditKey = null;
-      window.currentEditIndex = null;
-      return;
-    }
-
-    data.approval = false;
-    simpanData("peminjaman", data);
-    showToast("Data peminjaman disimpan!");
-    renderPeminjaman();
-    showForm("peminjaman");
-    resetForm("pinjam");
-  };
-
-  window.submitFormZoom = function () {
-    const data = ambilNilaiForm([
-      "zoom-npp",
-      "zoom-nama",
-      "zoom-bagian",
-      "zoom-tanggal",
-      "zoom-waktu",
-      "zoom-kegiatan",
-    ]);
-
-    if (fieldKosong(data, Object.keys(data))) return;
-
-    const isEdit =
-      window.currentEditKey === "zoom" && window.currentEditIndex !== undefined;
-    if (isEdit) {
-      const all = JSON.parse(localStorage.getItem("zoom") || "[]");
-      data.akun = all[window.currentEditIndex].akun || "";
-      all[window.currentEditIndex] = { ...data, approval: false };
-      localStorage.setItem("zoom", JSON.stringify(all));
-      showToast("Data Zoom diperbarui!");
-      renderZoom();
-      showForm("peminjaman-zoom");
-      resetForm("zoom");
-      style.display = "none";
-      window.currentEditKey = null;
-      window.currentEditIndex = null;
-      return;
-    }
-
-    data.akun = "";
-    data.approval = false;
-    simpanData("zoom", data);
-    showToast("Data Zoom disimpan!");
-    renderZoom();
-    showForm("peminjaman-zoom");
-    resetForm("zoom");
-  };
-
-  window.submitFormGrab = function () {
-    const data = ambilNilaiForm([
-      "grab-npp",
-      "grab-nama",
-      "grab-tanggal",
-      "grab-jam",
-      "grab-tujuan",
-      "grab-keterangan",
-    ]);
-
-    if (fieldKosong(data, Object.keys(data))) return;
-
-    const isEdit =
-      window.currentEditKey === "grab" && window.currentEditIndex !== undefined;
-    if (isEdit) {
-      const all = JSON.parse(localStorage.getItem("grab") || "[]");
-      data.kode = all[window.currentEditIndex].kode || "";
-      all[window.currentEditIndex] = { ...data, approval: false };
-      localStorage.setItem("grab", JSON.stringify(all));
-      showToast("Data Grab diperbarui!");
-      renderGrab();
-      showForm("pemesanan-grab");
-      resetForm("grab");
-      style.display = "none";
-      window.currentEditKey = null;
-      window.currentEditIndex = null;
-      return;
-    }
-
-    data.kode = "";
-    data.approval = false;
-    simpanData("grab", data);
-    showToast("Data Grab disimpan!");
-    renderGrab();
-    showForm("pemesanan-grab");
-    resetForm("grab");
-  };
-
-  window.editData = function (key, index) {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const item = data[index];
-    if (!item) return;
-
-    window.currentEditKey = key;
-    window.currentEditIndex = index;
-
-    const role = localStorage.getItem("role");
-
-    // 👇 TAMBAHKAN BAGIAN INI UNTUK INVENTARIS
-    if (key === "inventaris") {
-      document.getElementById("inv-kode").value = item.kode;
-      document.getElementById("inv-nama").value = item.nama;
-      document.getElementById("inv-lokasi").value = item.lokasi;
-      document.getElementById("inv-kondisi").value = item.kondisi;
-      showForm("form-inventaris");
-      return;
-    }
-
-    if (key === "mutasi") {
-      document.getElementById("mutasi-npp").value = item["mutasi-npp"];
-      document.getElementById("mutasi-nama").value = item["mutasi-nama"];
-      document.getElementById("mutasi-bagian").value = item["mutasi-bagian"];
-      document.getElementById("mutasi-tanggal").value = item["mutasi-tanggal"];
-      document.getElementById("mutasi-jamPinjam").value =
-        item["mutasi-jamPinjam"];
-      document.getElementById("mutasi-jamSelesai").value =
-        item["mutasi-jamSelesai"];
-      document.getElementById("mutasi-kendaraan").value =
-        item["mutasi-kendaraan"];
-      document.getElementById("mutasi-driver").value = item["mutasi-driver"];
-      document.getElementById("mutasi-tujuan").value = item["mutasi-tujuan"];
-      document.getElementById("mutasi-keterangan").value =
-        item["mutasi-keterangan"];
-      showForm("form-mutasi");
-      return;
-    }
-
-    const prefix = key === "peminjaman" ? "pinjam" : key;
-
-    for (let field in item) {
-      const fieldKey = `${prefix}-${field.split("-")[1] || field}`;
-      const el = document.getElementById(fieldKey);
-      if (el && el.type !== "file") {
-        el.value = item[field];
-
-        // Tampilkan field kode (grab) jika admin dan belum disetujui
-        if (key === "grab") {
-          const wrap = document.getElementById("wrap-grab-kode");
-          const input = document.getElementById("grab-kode");
-          const btn = document.getElementById("edit-kode-btn");
-
-          if (role === "admin" && wrap && input && btn) {
-            wrap.style.display = "flex";
-            input.value = item.kode || "";
-            input.readOnly = true;
-            btn.style.display = !item.approval ? "inline-block" : "none";
-          }
-        }
-
-        if (key === "zoom") {
-          const wrap = document.getElementById("wrap-zoom-akun");
-          const input = document.getElementById("zoom-akun");
-          const btn = document.getElementById("edit-akun-btn");
-
-          if (role === "admin" && wrap && input && btn) {
-            wrap.style.display = "flex";
-            input.value = item.akun || "";
-            input.readOnly = true;
-            btn.style.display = !item.approval ? "inline-block" : "none";
-          }
-        }
-
-        // Tampilkan field akun (zoom) jika admin dan belum disetujui
-        if (key === "zoom" && field === "akun") {
-          el.readOnly = !(role === "admin" && item.approval === false);
-          el.parentElement.style.display = "block";
-          const editBtn = document.getElementById("edit-akun-btn");
-          if (editBtn)
-            editBtn.style.display =
-              role === "admin" && item.approval === false
-                ? "inline-block"
-                : "none";
-        }
-      }
-    }
-
-    showForm(`form-${key}`);
-  };
-
-  function aksiColumn(key, index) {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") return "-";
-
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const item = data[index];
-
-    const approveButton = item.approval
-      ? ""
-      : `<button onclick="setujuData('${key}', ${index})" class="px-2 py-1 bg-green-500 text-white rounded text-sm">Approve</button>`;
-
-    return `
-    <div class="flex gap-2">
-      ${approveButton}
-      <button onclick="editData('${key}', ${index})" class="px-2 py-1 bg-blue-500 text-white rounded text-sm">Edit</button>
-      <button onclick="hapusData('${key}', ${index})" class="px-2 py-1 bg-red-500 text-white rounded text-sm">Hapus</button>
-    </div>
-  `;
-  }
-
-  const oldSubmitGrab = window.submitFormGrab;
-  window.submitFormGrab = function () {
-    const data = ambilNilaiForm([
-      "grab-npp",
-      "grab-nama",
-      "grab-tanggal",
-      "grab-jam",
-      "grab-tujuan",
-      "grab-keterangan",
-    ]);
-
-    if (fieldKosong(data, Object.keys(data))) return;
-    oldSubmitGrab();
-    resetForm("grab");
-    const wrapKode = document.getElementById("wrap-grab-kode");
-    if (wrapKode) wrapKode.style.display = role === "admin" ? "flex" : "none";
-  };
-
-  function fieldKosong(data, fields = []) {
-    const labelMap = {
-      // Inventaris
-      "inv-kode": "Kode aset kudune diisi!",
-      "inv-nama": "Nama aset diisi sik to ya!",
-      "inv-lokasi": "Lokasi asete ning ndi bolo?",
-      "inv-kondisi": "Kondisie pi jal?",
-      "inv-foto": "PAP Sik",
-
-      // Mutasi
-      "mutasi-npp": "NPP kudu diisi, sapa seng numpak mobil?",
-      "mutasi-nama": "Jenenge sopo kui kuduu jelas, ojo kosong!",
-      "mutasi-bagian": "Bagiane opo ik? Diisi sik ya!",
-      "mutasi-tanggal": "Tanggal e lali diisi bolo!",
-      "mutasi-jamPinjam": "Jam mulai nyelang mobil durung diisi!",
-      "mutasi-jamSelesai": "Jam selesai e nang kapan? Isen sik ya!",
-      "mutasi-kendaraan": "Nganggo mobil opo bro?",
-      "mutasi-driver": "Driver e durung dipilih lho!",
-      "mutasi-tujuan": "Tujuane arep neng endi?",
-      "mutasi-keterangan": "Keterangane dikasih lah, ben ngerti tujuanmu!",
-
-      // ==== PEMINJAMAN RUANG ====
-      "pinjam-npp": "NPP peminjam kudu diisi!",
-      "pinjam-nama": "Nama peminjam kudu jelas!",
-      "pinjam-bagian": "Bagiane kerja ning ngendi bolo?",
-      "pinjam-tanggal": "Tanggal pinjam durung diisi!",
-      "pinjam-waktu": "Waktune pinjam ruangan durung diisi!",
-      "pinjam-keterangan": "Keterangane durung ditulis!",
-      "pinjam-ruangan": "Ruangan e durung dipilih, ojo lali!",
-
-      // ==== ZOOM ====
-      "zoom-npp": "NPP kudu diisi sek, ben valid!",
-      "zoom-nama": "Jenenge sopo seng minjem Zoom?",
-      "zoom-bagian": "Bagian kerja peminjam kudu jelas!",
-      "zoom-tanggal": "Tanggal peminjaman Zoom durung diisi!",
-      "zoom-waktu": "Jam e kapan, durung diisi iki!",
-      "zoom-kegiatan": "Topik/kegiatan kudu ditulis ben ngerti gunane!",
-
-      // ==== GRAB ====
-      "grab-npp": "NPP pemesan Grab kudu diisi!",
-      "grab-nama": "Jenenge seng pesen Grab durung diisi!",
-      "grab-tanggal": "Tanggal pesenan e lali diisi!",
-      "grab-jam": "Jam berangkat kudu jelas!",
-      "grab-tujuan": "Tujuan e neng endi? Isen sik!",
-      "grab-keterangan": "Keterangane durung ditulis bolo!",
-    };
-
-    const kosong = fields.find((key) => !data[key] || data[key].trim() === "");
-    if (kosong) {
-      showToast(labelMap[kosong] || `Field '${kosong}' durung diisi!`, "error");
-      return true;
-    }
-    return false;
-  }
-
-  // ============== RENDER TABLES ============== //
-
-  function renderAllTables() {
-    renderMutasi();
-    renderPeminjaman();
-    renderZoom();
-    renderGrab();
-    renderInventaris();
-  }
-
-  function renderMutasi() {
-    const data = JSON.parse(localStorage.getItem("mutasi") || "[]");
-    const tbody = document.querySelector("#mutasiTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${item["mutasi-npp"]}</td>
-        <td>${item["mutasi-nama"]}</td>
-        <td>${item["mutasi-bagian"]}</td>
-        <td>${item["mutasi-tanggal"]}</td>
-        <td>${item["mutasi-jamPinjam"]}</td>
-        <td>${item["mutasi-jamSelesai"]}</td>
-        <td>${item["mutasi-kendaraan"]}</td>
-        <td>${item["mutasi-driver"]}</td>
-        <td>${item["mutasi-tujuan"]}</td>
-        <td>${item["mutasi-keterangan"]}</td>
-        <td>${item.approval ? "✅ Disetujui" : "⏳Menunggu"}</td>
+      </td>
+      <td class="border px-2">
         ${
           isAdmin
-            ? `<td>
-        <button onclick="editData('mutasi', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-        <button onclick="hapusData('mutasi', ${index})" class="bg-red-500 text-white px-2 py-1 rounded ml-1">Hapus</button>
-        ${
-          !item.approval
-            ? `<button onclick="setujuData('mutasi', ${index})" class="bg-green-500 text-white px-2 py-1 rounded ml-1">Approve</button>`
-            : ""
+            ? `
+          <button onclick="editGrab('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded mr-1">Edit</button>
+          <button onclick="hapusGrab('${item.id}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded">Hapus</button>
+        `
+            : '-'
         }
-      </td>`
-            : ""
-        }
-      `;
-      tbody.appendChild(row);
-    });
-  }
-
-  function renderPeminjaman() {
-    const data = JSON.parse(localStorage.getItem("peminjaman") || "[]");
-    const tbody = document.querySelector("#peminjamanTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-      <td>${item["pinjam-npp"]}</td>
-      <td>${item["pinjam-nama"]}</td>
-      <td>${item["pinjam-bagian"]}</td>
-      <td>${item["pinjam-tanggal"]}</td>
-      <td>${item["pinjam-waktu"]}</td>
-      <td>${item["pinjam-keterangan"]}</td>
-      <td>${item["pinjam-ruangan"]}</td>
-      <td>${item.approval ? "✅ Disetujui" : "⏳Menunggu"}</td>
-      ${
-        isAdmin
-          ? `<td>
-        <button onclick="editData('peminjaman', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-        <button onclick="hapusData('peminjaman', ${index})" class="bg-red-500 text-white px-2 py-1 rounded ml-1">Hapus</button>
-        ${
-          !item.approval
-            ? `<button onclick="setujuData('peminjaman', ${index})" class="bg-green-500 text-white px-2 py-1 rounded ml-1">Approve</button>`
-            : ""
-        }
-      </td>`
-          : ""
-      }
+      </td>
     `;
-      tbody.appendChild(row);
-    });
+    tbody.appendChild(row);
   }
+}
 
-  function renderInventaris() {
-    const isAdmin = localStorage.getItem("role") === "admin";
-    const tbody = document.querySelector("#inventarisTable tbody");
-    const data = JSON.parse(localStorage.getItem("inventaris") || "[]");
-    const role = localStorage.getItem("role");
+function showFormGrab() {
+  document.getElementById('form-grab').classList.remove('hidden');
+  document.getElementById('form-grab').dataset.editing = '';
+  document.querySelectorAll('#form-grab input, #form-grab textarea').forEach((el) => (el.value = ''));
+}
 
-    tbody.innerHTML = data
-      .map(
-        (item, index) => `
-      <tr>
-        <td class="px-4 py-2">${item.kode}</td>
-        <td class="px-4 py-2">${item.nama}</td>
-        <td class="px-4 py-2">${item.lokasi}</td>
-        <td class="px-4 py-2">${item.kondisi}</td>
-        <td class="px-4 py-2"><img src="${
-          item.foto
-        }" class="h-16 w-12 object-cover rounded"></td>
-        ${
-          isAdmin
-            ? `<td class="px-4 py-2">
-                <button onclick="editData('inventaris', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-                <button onclick="hapusData('inventaris', ${index})" class="bg-red-500 text-white px-2 py-1 rounded ml-1">Hapus</button>
-              </td>`
-            : ""
-        }
-      </tr>
-    `
-      )
-      .join("");
-  }
+function batalFormGrab() {
+  document.getElementById('form-grab').classList.add('hidden');
+  document.getElementById('form-grab').dataset.editing = '';
+}
 
-  // Fungsi edit akun Zoom dan kode Grab (hanya admin)
-  window.editField = function (key, index, field) {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const value = prompt(`Edit ${field}:`, data[index][field] || "");
-    if (value !== null) {
-      data[index][field] = value;
-      localStorage.setItem(key, JSON.stringify(data));
-      showToast(`${field} diperbarui.`);
-      renderAllTables();
-    }
+async function submitFormGrab(e) {
+  e.preventDefault();
+  const id = document.getElementById('form-grab').dataset.editing;
+  const data = {
+    npp: document.getElementById('grab-npp').value.trim(),
+    nama: document.getElementById('grab-nama').value.trim(),
+    tanggal: document.getElementById('grab-tanggal').value,
+    jam: document.getElementById('grab-jam').value,
+    tujuan: document.getElementById('grab-tujuan').value,
+    keterangan: document.getElementById('grab-keterangan').value,
   };
 
-  // Modifikasi fungsi render Zoom & Grab
-  function renderZoom() {
-    const data = JSON.parse(localStorage.getItem("zoom") || "[]");
-    const tbody = document.querySelector("#zoomTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-      <td>${item["zoom-npp"]}</td>
-      <td>${item["zoom-nama"]}</td>
-      <td>${item["zoom-bagian"]}</td>
-      <td>${item["zoom-tanggal"]}</td>
-      <td>${item["zoom-waktu"]}</td>
-      <td>${item["zoom-kegiatan"]}</td>
-      <td>
-      ${item.akun || "-"} ${
-        isAdmin && !item.approval
-          ? `<button onclick="editField('zoom', ${index}, 'akun')" class="ml-2 text-sm text-blue-600 underline">Edit</button>`
-          : ""
-      }</td>
-      <td>${item.approval ? "✅ Disetujui" : "⏳Menunggu"}</td>
-      ${
-        isAdmin
-          ? `<td>
-        <button onclick="editData('zoom', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-        <button onclick="hapusData('zoom', ${index})" class="bg-red-500 text-white px-2 py-1 rounded ml-1">Hapus</button>
-        ${
-          !item.approval
-            ? `<button onclick="setujuData('zoom', ${index})" class="bg-green-500 text-white px-2 py-1 rounded ml-1">Approve</button>`
-            : ""
-        }
-      </td>`
-          : ""
-      }
-    `;
-      tbody.appendChild(row);
+  const res = id ? await putData('grab', id, data) : await postData('grab', data);
+  const result = await res.json();
+
+  showToast(result.message, result.success ? 'success' : 'error');
+  if (result.success) {
+    batalFormGrab();
+    renderGrabTable();
+  }
+}
+
+async function editGrab(id) {
+  const data = await fetchData('grab');
+  const item = data.find((i) => i.id === id);
+  if (!item) return;
+
+  document.getElementById('form-grab').classList.remove('hidden');
+  document.getElementById('form-grab').dataset.editing = id;
+
+  document.getElementById('grab-npp').value = item.npp;
+  document.getElementById('grab-nama').value = item.nama;
+  document.getElementById('grab-tanggal').value = item.tanggal;
+  document.getElementById('grab-jam').value = item.jam;
+  document.getElementById('grab-tujuan').value = item.tujuan;
+  document.getElementById('grab-keterangan').value = item.keterangan;
+}
+
+async function hapusGrab(id) {
+  if (!confirm('Yakin ingin menghapus data ini?')) return;
+  const res = await deleteData('grab', id);
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderGrabTable();
+}
+
+const kodeGrabMap = {};
+
+function setKodeGrab(id, kode) {
+  kodeGrabMap[id] = kode;
+}
+
+async function approveGrab(id) {
+  const kode = (kodeGrabMap[id] || '').trim();
+  if (!kode) {
+    showToast('Isi kode Grab terlebih dahulu sebelum menyetujui.', 'error');
+    return;
+  }
+
+  const res = await fetch(`${API_BASE}/grab.php?id=${id}&approve=true`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kode }),
+  });
+
+  const result = await res.json();
+  showToast(result.message, result.success ? 'success' : 'error');
+  renderGrabTable();
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  try {
+    const response = await fetch('api/session.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
     });
-  }
 
-  function renderGrab() {
-    const data = JSON.parse(localStorage.getItem("grab") || "[]");
-    const tbody = document.querySelector("#grabTable tbody");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-      <td>${item["grab-npp"]}</td>
-      <td>${item["grab-nama"]}</td>
-      <td>${item["grab-tanggal"]}</td>
-      <td>${item["grab-jam"]}</td>
-      <td>${item["grab-tujuan"]}</td>
-      <td>${item["grab-keterangan"]}</td>
-      <td> ${item.kode || "-"}${
-        isAdmin && !item.approval
-          ? `<button onclick="editField('grab', ${index}, 'kode')" class="ml-2 text-sm text-blue-600 underline">Edit</button>`
-          : ""
-      }</td>
-      <td>${item.approval ? "✅ Disetujui" : "⏳Menunggu"}</td>
-      ${
-        isAdmin
-          ? `<td>
-        <button onclick="editData('grab', ${index})" class="bg-blue-500 text-white px-2 py-1 rounded">Edit</button>
-        <button onclick="hapusData('grab', ${index})" class="bg-red-500 text-white px-2 py-1 rounded ml-1">Hapus</button>
-        ${
-          !item.approval
-            ? `<button onclick="setujuData('grab', ${index})" class="bg-green-500 text-white px-2 py-1 rounded ml-1">Approve</button>`
-            : ""
-        }
-      </td>`
-          : ""
-      }
-    `;
-      tbody.appendChild(row);
-    });
-  }
+    const result = await response.json();
 
-  function renderAllTables() {
-    renderMutasi();
-    renderPeminjaman();
-    renderZoom();
-    renderGrab();
-    renderInventaris();
+    if (result.success) {
+      alert('Login berhasil!');
+      window.location.href = 'index.html';
+    } else {
+      alert('Login gagal: ' + result.message);
+    }
+  } catch (err) {
+    alert('Server tidak dapat dihubungi.');
+    console.error(err);
   }
-
-  renderAllTables();
 });
 
-const kodeBtn = document.getElementById("edit-kode-btn");
-if (kodeBtn) {
-  kodeBtn.addEventListener("click", () => {
-    const input = document.getElementById("grab-kode");
-    if (input) input.readOnly = false;
-  });
+// Filter
+document.getElementById('filterGrabNama').addEventListener('input', renderGrabTable);
+
+// Init dan Render Semua
+function renderAllTables() {
+  renderInventarisTable();
+  renderMutasiTable();
+  renderPeminjamanTable();
+  renderZoomTable();
+  renderGrabTable();
 }
 
-const akunBtn = document.getElementById("edit-akun-btn");
-if (akunBtn) {
-  akunBtn.addEventListener("click", () => {
-    const input = document.getElementById("zoom-akun");
-    if (input) input.readOnly = false;
-  });
-}
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('📦 DOM loaded');
+  const isLoggedIn = await checkSession();
+  if (!isLoggedIn) return;
 
-function resetForm(formId) {
-  const form = document.getElementById(formId);
-  if (!form) return;
-
-  const inputs = form.querySelectorAll("input, select, textarea");
-  inputs.forEach((el) => {
-    if (el.type === "checkbox" || el.type === "radio") {
-      el.checked = false;
-    } else if (el.type === "file") {
-      el.value = null;
-    } else {
-      el.value = "";
-    }
-  });
-}
+  setupNavigation();
+  renderAllTables();
+  updateStatistik();
+  showSection('home');
+});
