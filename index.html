@@ -1,354 +1,184 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistem Pengelolaan Aset</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script>
-      function getGreeting() {
-        const hour = new Date().getHours();
-        if (hour >= 5 && hour < 12) return "Selamat pagi, User";
-        if (hour >= 12 && hour < 15) return "Selamat siang, User";
-        if (hour >= 15 && hour < 18) return "Selamat sore, User";
-        return "Selamat malam, User";
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const role = localStorage.getItem("role");
-        if (!role) {
-          window.location.href = "login.html";
-          return;
-        }
-
-        const name = role === "admin" ? "Admin" : "User";
-        const greeting = document.getElementById("greeting");
-        if (greeting)
-          greeting.textContent = getGreeting().replace("User", name);
-
-        const pages = document.querySelectorAll(".page-section");
-        pages.forEach((section) => section.classList.add("hidden"));
-        document.getElementById("home")?.classList.remove("hidden");
-
-        document.querySelectorAll(".nav-link").forEach((link) => {
-          link.addEventListener("click", (e) => {
-            e.preventDefault();
-            const target = link.getAttribute("data-target");
-            pages.forEach((section) => section.classList.add("hidden"));
-            document.getElementById(target)?.classList.remove("hidden");
-          });
-        });
-
-        if (role !== "admin") {
-          document.querySelectorAll(".btn-approval").forEach((btn) => {
-            btn.disabled = true;
-            btn.classList.add("opacity-0", "cursor-disabel");
-            btn.title = "Hanya admin yang dapat menggunakan fitur ini";
-          });
-        }
-      });
-
-      function showForm(formId) {
-        const sections = document.querySelectorAll(".page-section");
-        sections.forEach((section) => section.classList.add("hidden"));
-        document.getElementById(formId).classList.remove("hidden");
-        resetForm(formId);
-      }
-    </script>
+    <title>Sistem Manajemen Aset</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="Gambar/apple-touch-icon-57x57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="Gambar/apple-touch-icon-114x114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="Gambar/apple-touch-icon-72x72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="Gambar/apple-touch-icon-144x144.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="60x60" href="Gambar/apple-touch-icon-60x60.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="Gambar/apple-touch-icon-120x120.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="Gambar/apple-touch-icon-76x76.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="Gambar/apple-touch-icon-152x152.png" />
+    <link rel="icon" type="image/png" href="Gambar/favicon-196x196.png" sizes="196x196" />
+    <link rel="icon" type="image/png" href="Gambar/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/png" href="Gambar/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="Gambar/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="Gambar/favicon-128.png" sizes="128x128" />
+    <meta name="application-name" content="&nbsp;" />
+    <meta name="msapplication-TileColor" content="#FFFFFF" />
+    <meta name="msapplication-TileImage" content="mstile-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="mstile-70x70.png" />
+    <meta name="msapplication-square150x150logo" content="mstile-150x150.png" />
+    <meta name="msapplication-wide310x150logo" content="mstile-310x150.png" />
+    <meta name="msapplication-square310x310logo" content="mstile-310x310.png" />
   </head>
-  <body class="bg-gradient-to-br from-purple-50 to-blue-100 min-h-screen">
-    <!-- Tombol Toggle -->
-    <button
-      id="sidebarToggle"
-      class="md:hidden fixed top-3 left-3 z-50 p-2 bg-gray-200 rounded"
-    >
-      <svg
-        class="w-6 h-6 text-gray-800"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
-    </button>
-
-    <div class="flex">
-      <!-- Sidebar -->
-      <aside
-        id="sidebar"
-        class="fixed md:relative w-64 bg-white shadow-md p-6 min-h-screen transition-transform duration-300 transform -translate-x-full md:translate-x-0 z-40"
-      >
-        <div class="flex items-center gap-3 mb-10">
-          <svg
-            class="w-6 h-6 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </div>
+  <body class="flex flex-col min-h-screen bg-gray-100">
+    <!-- ========== Sidebar ========== -->
+    <div class="flex flex-col md:flex-row flex-1">
+      <aside id="sidebar" class="w-64 bg-white shadow h-screen p-6 fixed top-0 left-0 z-50 transform -translate-x-full transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:block">
         <nav class="space-y-4">
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="home"
-          >
-            🏠 Home
-          </a>
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="inventaris"
-          >
-            📦 Inventaris
-          </a>
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="mutasi"
-          >
-            🚚 Mutasi
-          </a>
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="peminjaman"
-          >
-            🏢 Peminjaman
-          </a>
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="peminjaman-zoom"
-          >
-            🎦 Peminjaman Zoom
-          </a>
-          <a
-            href="#"
-            class="nav-link w-full block text-left py-2 px-4 hover:bg-gray-100 rounded"
-            data-target="pemesanan-grab"
-          >
-            🚕 Pemesanan Grab
-          </a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="home">🏠 Home</a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="inventaris">📦 Inventaris</a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="mutasi">🚚 Mutasi</a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="peminjaman">🏢 Peminjaman</a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="zoom">🎦 Zoom</a>
+          <a href="#" class="nav-link block px-2 py-1 hover:bg-gray-100 rounded" data-target="grab">🚕 Grab</a>
+          <button href="#" id="reset-data-link" class="hidden bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full" onclick="resetAllData()">🗑️ Reset Semua Data</button>
         </nav>
-        <div id="admin-reset" class="mt-4"></div>
       </aside>
+      <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-40 z-40 hidden md:hidden" onclick="toggleSidebar()"></div>
 
-      <!-- Main Content -->
-      <main class="flex-1 p-10">
+      <!-- ========== Content ========== -->
+      <main class="flex-1 p-6 overflow-y-auto">
         <!-- Topbar -->
-        <div class="flex items-center justify-between mb-10">
-          <img
-            src="Gambar/Logo Pantau.in.png"
-            alt="Pantau.in Logo"
-            class="h-12 ml-4"
-          />
+        <div class="flex items-center justify-between mb-10 w-full">
+          <button class="block md:hidden text-gray-700 focus:outline-none" onclick="toggleSidebar()">
+            <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <img src="Gambar/Logo Si Bsbe.png" alt="Pantau.in Logo" class="h-12 ml-4" />
           <div class="flex items-center gap-4">
             <span id="greeting" class="text-gray-700 font-medium"></span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 1116 0H2z"
-                clip-rule="evenodd"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 1116 0H2z" clip-rule="evenodd" />
             </svg>
-            <button
-              onclick="logout()"
-              class="text-sm bg-red-200 hover:bg-red-200 text-red-600 px-3 py-1 rounded-full transition"
-              title="Logout"
-            >
-              Logout
-            </button>
+            <button onclick="logout()" class="text-sm bg-red-200 hover:bg-red-200 text-red-600 px-3 py-1 rounded-full transition" title="Logout">Logout</button>
           </div>
         </div>
 
         <!-- Home Section -->
-        <div class="bg-white rounded-2xl shadow p-6 mx-full">
-          <h2 class="text-2xl font-semibold mb-6 text-gray-700">
-            Statistik Pengelolaan Aset
-          </h2>
+        <div id="home" class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10">
+          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Statistik Pengelolaan Aset</h2>
 
           <!-- Statistik Baris Atas -->
-          <div
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6"
-          >
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             <div class="bg-blue-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-700">Inventaris</h3>
-              <p class="text-2xl font-bold text-blue-800" id="statInventaris">
-                732
-              </p>
+              <h3 class="text-gray-600">Inventaris</h3>
+              <p class="text-2xl font-bold text-blue-800" id="statInventaris">732</p>
             </div>
             <div class="bg-yellow-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-700">Kendaraan Roda 4</h3>
-              <p class="text-2xl font-bold text-yellow-700" id="statKendaraan">
-                7
-              </p>
+              <h3 class="text-gray-600">Kendaraan Roda 4</h3>
+              <p class="text-2xl font-bold text-yellow-700" id="statKendaraan">7</p>
             </div>
             <div class="bg-green-100 rounded-xl p-4 text-center">
-              <h3 class="text-gray-700">Driver</h3>
+              <h3 class="text-gray-600">Driver</h3>
               <p class="text-2xl font-bold text-green-700" id="statDriver">3</p>
             </div>
           </div>
         </div>
-        <div
-          id="admin-dashboard"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 hidden"
-        >
+        <div id="admin-dashboard" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <div class="bg-yellow-100 rounded-xl p-4 shadow">
             <h3 class="font-bold text-lg">Mutasi Belum Disetujui</h3>
-            <p
-              id="count-mutasi-pending"
-              class="text-3xl font-bold text-yellow-700"
-            >
-              0
-            </p>
+            <p id="count-mutasi-pending" class="text-3xl font-bold text-yellow-700">0</p>
           </div>
           <div class="bg-blue-100 rounded-xl p-4 shadow">
             <h3 class="font-bold text-lg">Peminjaman Belum Disetujui</h3>
-            <p
-              id="count-peminjaman-pending"
-              class="text-3xl font-bold text-blue-700"
-            >
-              0
-            </p>
+            <p id="count-peminjaman-pending" class="text-3xl font-bold text-blue-700">0</p>
           </div>
           <div class="bg-purple-100 rounded-xl p-4 shadow">
             <h3 class="font-bold text-lg">Zoom Belum Disetujui</h3>
-            <p
-              id="count-zoom-pending"
-              class="text-3xl font-bold text-purple-700"
-            >
-              0
-            </p>
+            <p id="count-zoom-pending" class="text-3xl font-bold text-purple-700">0</p>
           </div>
           <div class="bg-pink-100 rounded-xl p-4 shadow">
             <h3 class="font-bold text-lg">Grab Belum Disetujui</h3>
-            <p id="count-grab-pending" class="text-3xl font-bold text-pink-700">
-              0
-            </p>
+            <p id="count-grab-pending" class="text-3xl font-bold text-pink-700">0</p>
           </div>
         </div>
 
-        <!-- Inventaris Section -->
-        <!-- Inventaris Section -->
-        <div
-          id="inventaris"
-          class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
+        <!--INVENTARIS-->
+        <div id="inventaris" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
           <h2 class="text-xl font-semibold mb-4">Data Inventaris</h2>
 
-          <!-- Filter dan Aksi -->
-          <div
-            class="flex flex-wrap gap-4 items-center justify-between mb-4 w-full"
-          >
-            <input
-              type="text"
-              id="filterKodeNama"
-              placeholder="Cari Kode atau Nama Aset..."
-              class="border border-gray-300 rounded px-4 py-2 flex-1 min-w-[200px]"
-              onkeyup="filterTable()"
-            />
-            <select
-              id="filterLokasi"
-              class="border border-gray-300 rounded px-4 py-2"
-              onchange="filterTable()"
-            >
+          <!-- Filter & Aksi -->
+          <div class="mb-4 flex flex-col md:flex-row gap-4 flex-wrap">
+            <input type="text" id="filterKodeNama" placeholder="Cari Kode atau Nama Aset..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
+            <select id="filterLokasi" class="border border-gray-300 rounded px-4 py-2">
               <option value="">Semua Lokasi</option>
               <option value="Aula">Aula</option>
-              <option value="Mushola">Mushola</option>
-              <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
-              <option value="Ruang Kaca">Ruang Kaca</option>
-              <option value="Kepala Cabang">Kepala Cabang</option>
-              <option value="SDMUK">SDMUK</option>
-              <!-- Tambah lokasi lainnya -->
+              <option value="Ruang Server">Ruang Server</option>
+              <option value="Gudang Dalam">Gudang Dalam</option>
             </select>
-            <select
-              id="filterKondisiSidebar"
-              class="border border-gray-300 rounded px-4 py-2"
-              onchange="filterTable()"
-            >
+            <select id="filterKondisi" class="border border-gray-300 rounded px-4 py-2">
               <option value="">Semua Kondisi</option>
               <option value="Baik">Baik</option>
               <option value="Rusak">Rusak</option>
               <option value="Rusak Berat">Rusak Berat</option>
             </select>
-            <button
-              onclick="exportTableToExcel('inventarisTable', 'Inventaris')"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              📤 Export Excel
-            </button>
-            <button
-              onclick="showForm('form-inventaris')"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              + Tambahkan Inventaris
-            </button>
+            <button onclick="exportTableToExcel('inventarisTable', 'Inventaris')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
+            <button id="btn-tambah-inventaris" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 hidden" onclick="showFormInventaris()">+ Tambah Inventaris</button>
           </div>
 
-          <!-- Tabel Inventaris -->
-          <div class="overflow-x-auto w-full">
-            <table
-              id="inventarisTable"
-              class="w-full text-sm text-left table-auto border border-gray-300"
-            >
+          <!-- Tabel -->
+          <div class="overflow-x-auto">
+            <table id="inventarisTable" class="w-full border border-gray-300 text-sm">
               <thead class="bg-gray-100">
                 <tr>
-                  <th class="px-4 py-2 border">Kode</th>
-                  <th class="px-4 py-2 border">Nama Aset</th>
-                  <th class="px-4 py-2 border">Lokasi</th>
-                  <th class="px-4 py-2 border">Kondisi</th>
-                  <th class="px-4 py-2 border">Foto</th>
+                  <th class="border px-4 py-2">Kode</th>
+                  <th class="border px-4 py-2">Nama</th>
+                  <th class="border px-4 py-2">Lokasi</th>
+                  <th class="border px-4 py-2">Kondisi</th>
+                  <th class="border px-4 py-2">Foto</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Data inventaris akan di-render di sini -->
+                <!-- Data akan dirender oleh JS -->
               </tbody>
             </table>
           </div>
+
+          <!-- Form Input (Hidden Default) -->
+          <div id="form-inventaris" class="mt-8 border-t pt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Inventaris</h3>
+            <form onsubmit="submitFormInventaris(event)" class="grid gap-4 md:grid-cols-2">
+              <input type="text" id="inv-kode" placeholder="Kode Aset" required class="border px-4 py-2 rounded" />
+              <input type="text" id="inv-nama" placeholder="Nama Aset" required class="border px-4 py-2 rounded" />
+              <select id="inv-lokasi" required class="border px-4 py-2 rounded">
+                <option value="">Pilih Lokasi</option>
+                <option value="Aula">Aula</option>
+                <option value="Ruang Server">Ruang Server</option>
+                <option value="Gudang Dalam">Gudang Dalam</option>
+              </select>
+              <select id="inv-kondisi" required class="border px-4 py-2 rounded">
+                <option value="">Pilih Kondisi</option>
+                <option value="Baik">Baik</option>
+                <option value="Rusak">Rusak</option>
+                <option value="Rusak Berat">Rusak Berat</option>
+              </select>
+              <div class="col-span-2">
+                <label class="block mb-1">Upload Foto</label>
+                <input type="file" id="inv-foto" accept="image/*" class="w-full border px-4 py-2 rounded bg-white" />
+              </div>
+              <div class="col-span-2 flex gap-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+                <button type="button" onclick="batalFormInventaris()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <!-- Mutasi Section -->
-        <div
-          id="mutasi"
-          class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
+        <!--MUTASI-->
+        <div id="mutasi" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
           <h2 class="text-xl font-semibold mb-4">Mutasi Kendaraan & Driver</h2>
 
-          <!-- Filter dan Tombol -->
-          <div
-            class="flex flex-wrap gap-4 items-center justify-between mb-4 w-full"
-          >
-            <input
-              type="text"
-              id="filterMutasiNama"
-              placeholder="Cari nama..."
-              class="border border-gray-300 rounded px-4 py-2 flex-1 min-w-[200px]"
-              onkeyup="filterMutasi()"
-            />
-            <select
-              id="filterMutasiBagian"
-              class="border border-gray-300 rounded px-4 py-2"
-              onchange="filterMutasi()"
-            >
+          <!-- Filter dan Aksi -->
+          <div class="flex flex-wrap gap-4 items-center mb-4">
+            <input type="text" id="filterMutasiNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
+            <select id="filterMutasiBagian" class="border border-gray-300 rounded px-4 py-2">
               <option value="">Semua Bagian</option>
               <option value="SDMUK">SDMUK</option>
               <option value="PKP">PKP</option>
@@ -356,1048 +186,256 @@
               <option value="Kepser">Kepser</option>
               <option value="PMU">PMU</option>
               <option value="Yanfaskes">Yanfaskes</option>
-              <option value="Kabupaten Batang">Kabupaten Batang</option>
-              <option value="Kabupaten Pekalongan">Kabupaten Pekalongan</option>
-              <option value="Kabupaten Pemalang">Kabupaten Pemalang</option>
             </select>
-            <button
-              onclick="exportTableToExcel('mutasiTable', 'Mutasi')"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              📤 Export Excel
-            </button>
-            <button
-              onclick="showForm('form-mutasi')"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              + Tambahkan Mutasi
-            </button>
+            <button onclick="exportTableToExcel('mutasiTable', 'Mutasi')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
+            <button onclick="showFormMutasi()" id="btn-tambah-mutasi" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Mutasi</button>
           </div>
 
-          <!-- Tabel Mutasi -->
-          <div class="overflow-x-auto w-full">
-            <table
-              id="mutasiTable"
-              class="w-full text-sm text-left table-auto border border-gray-300"
-            >
+          <!-- Tabel -->
+          <div class="overflow-x-auto">
+            <table id="mutasiTable" class="w-full border border-gray-300 text-sm">
               <thead class="bg-gray-100">
                 <tr>
-                  <th class="px-4 py-2 border">NPP</th>
-                  <th class="px-4 py-2 border">Nama</th>
-                  <th class="px-4 py-2 border">Bagian</th>
-                  <th class="px-4 py-2 border">Tanggal</th>
-                  <th class="px-4 py-2 border">Jam Pinjam</th>
-                  <th class="px-4 py-2 border">Jam Selesai</th>
-                  <th class="px-4 py-2 border">Kendaraan</th>
-                  <th class="px-4 py-2 border">Driver</th>
-                  <th class="px-4 py-2 border">Tujuan</th>
-                  <th class="px-4 py-2 border">Keterangan</th>
-                  <th class="px-4 py-2 border">Approval</th>
+                  <th class="px-2 border">NPP</th>
+                  <th class="px-2 border">Nama</th>
+                  <th class="px-2 border">Bagian</th>
+                  <th class="px-2 border">Tanggal</th>
+                  <th class="px-2 border">Jam Pinjam</th>
+                  <th class="px-2 border">Jam Selesai</th>
+                  <th class="px-2 border">Kendaraan</th>
+                  <th class="px-2 border">Driver</th>
+                  <th class="px-2 border">Tujuan</th>
+                  <th class="px-2 border">Keterangan</th>
+                  <th class="px-2 border">Approval</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Data mutasi akan dirender di sini -->
+                <!-- Data akan dirender oleh JS -->
               </tbody>
             </table>
           </div>
+
+          <!-- Form Mutasi -->
+          <div id="form-mutasi" class="mt-8 border-t pt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Mutasi</h3>
+            <form onsubmit="submitFormMutasi(event)" class="grid gap-4 md:grid-cols-2">
+              <input type="text" id="mutasi-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
+              <input type="text" id="mutasi-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
+              <select id="mutasi-bagian" class="border px-4 py-2 rounded" required>
+                <option value="">Pilih Bagian</option>
+                <option value="SDMUK">SDMUK</option>
+                <option value="PKP">PKP</option>
+                <option value="Yanser">Yanser</option>
+                <option value="Kepser">Kepser</option>
+                <option value="PMU">PMU</option>
+                <option value="Yanfaskes">Yanfaskes</option>
+              </select>
+              <input type="date" id="mutasi-tanggal" class="border px-4 py-2 rounded" required />
+              <input type="time" id="mutasi-jamPinjam" placeholder="Jam Pinjam" class="border px-4 py-2 rounded" required />
+              <input type="time" id="mutasi-jamSelesai" placeholder="Jam Selesai" class="border px-4 py-2 rounded" required />
+              <select id="mutasi-kendaraan" class="border px-4 py-2 rounded" required>
+                <option value="">Pilih Kendaraan</option>
+                <option value="Innova G 1366 HH">Innova G 1366 HH</option>
+                <option value="Avanza G 1972 HH">Avanza G 1972 HH</option>
+                <option value="Ertiga G 1532 JH">Ertiga G 1532 JH</option>
+              </select>
+              <select id="mutasi-driver" class="border px-4 py-2 rounded" required>
+                <option value="">Pilih Driver</option>
+                <option value="Lutfi">Lutfi</option>
+                <option value="Trisno">Trisno</option>
+                <option value="Rifki">Rifki</option>
+              </select>
+              <input type="text" id="mutasi-tujuan" placeholder="Tujuan" class="border px-4 py-2 rounded" required />
+              <textarea id="mutasi-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
+              <div class="flex gap-2 md:col-span-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+                <button type="button" onclick="batalFormMutasi()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <!-- Peminjaman Section -->
-        <div
-          id="peminjaman"
-          class="page-section bg-white rounded-2xl shadow-lg p-6"
-        >
+        <!--PEMINJAMAN-->
+        <div id="peminjaman" class="page-section hidden bg-white rounded-2xl shadow-lg p-6">
           <h2 class="text-xl font-semibold mb-4">Peminjaman Ruangan</h2>
-          <div
-            class="flex flex-wrap gap-4 items-center justify-between mb-4 w-full"
-          >
-            <input
-              type="text"
-              id="filterPeminjamanNama"
-              placeholder="Cari nama..."
-              class="border border-gray-300 rounded px-4 py-2 flex-1 min-w-[200px]"
-              onkeyup="filterPeminjaman()"
-            />
-            <select
-              id="filterPeminjamanRuangan"
-              class="border border-gray-300 rounded px-4 py-2"
-              onchange="filterPeminjaman()"
-            >
+
+          <!-- Filter dan Aksi -->
+          <div class="flex flex-wrap gap-4 items-center mb-4">
+            <input type="text" id="filterPeminjamanNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
+            <select id="filterPeminjamanRuangan" class="border border-gray-300 rounded px-4 py-2">
               <option value="">Semua Ruangan</option>
               <option value="Aula">Aula</option>
               <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
               <option value="Ruang Kaca">Ruang Kaca</option>
             </select>
-            <button
-              onclick="exportTableToExcel('peminjamanTable', 'Peminjaman')"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              📤 Export Excel
-            </button>
-            <a
-              href="#"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-green-600"
-              onclick="showForm('form-peminjaman'), 'pinjam'"
-            >
-              + Tambahkan Peminjaman
-            </a>
+            <button onclick="exportTableToExcel('peminjamanTable', 'Peminjaman')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
+            <button onclick="showFormPeminjaman()" id="btn-tambah-peminjaman" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Peminjaman</button>
           </div>
 
-          <div class="overflow-x-auto w-full">
-            <table
-              class="w-full text-sm text-left table-auto border border-gray-300"
-              id="peminjamanTable"
-            >
+          <!-- Tabel -->
+          <div class="overflow-x-auto">
+            <table id="peminjamanTable" class="w-full border border-gray-300 text-sm">
               <thead class="bg-gray-100">
                 <tr>
-                  <th class="px-4 py-2 border">NPP</th>
-                  <th class="px-4 py-2 border">Nama</th>
-                  <th class="px-4 py-2 border">Bagian</th>
-                  <th class="px-4 py-2 border">Tanggal</th>
-                  <th class="px-4 py-2 border">Waktu</th>
-                  <th class="px-4 py-2 border">Keterangan</th>
-                  <th class="px-4 py-2 border">Ruangan</th>
-                  <th class="px-4 py-2 border">Approval</th>
+                  <th class="px-2 border">NPP</th>
+                  <th class="px-2 border">Nama</th>
+                  <th class="px-2 border">Bagian</th>
+                  <th class="px-2 border">Tanggal</th>
+                  <th class="px-2 border">Waktu</th>
+                  <th class="px-2 border">Keterangan</th>
+                  <th class="px-2 border">Ruangan</th>
+                  <th class="px-2 border">Approval</th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody>
+                <!-- Data akan dirender oleh JS -->
+              </tbody>
             </table>
+          </div>
+
+          <!-- Form Peminjaman -->
+          <div id="form-peminjaman" class="mt-8 border-t pt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Peminjaman</h3>
+            <form onsubmit="submitFormPeminjaman(event)" class="grid gap-4 md:grid-cols-2">
+              <input type="text" id="pinjam-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
+              <input type="text" id="pinjam-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
+              <select id="pinjam-bagian" class="border px-4 py-2 rounded" required>
+                <option value="">Pilih Bagian</option>
+                <option value="SDMUK">SDMUK</option>
+                <option value="PKP">PKP</option>
+                <option value="Yanser">Yanser</option>
+                <option value="Kepser">Kepser</option>
+                <option value="PMU">PMU</option>
+                <option value="Yanfaskes">Yanfaskes</option>
+              </select>
+              <input type="date" id="pinjam-tanggal" class="border px-4 py-2 rounded" required />
+              <input type="time" id="pinjam-waktu" class="border px-4 py-2 rounded" required />
+              <textarea id="pinjam-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
+              <select id="pinjam-ruangan" class="border px-4 py-2 rounded md:col-span-2" required>
+                <option value="">Pilih Ruangan</option>
+                <option value="Aula">Aula</option>
+                <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
+                <option value="Ruang Kaca">Ruang Kaca</option>
+              </select>
+              <div class="flex gap-2 md:col-span-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+                <button type="button" onclick="batalFormPeminjaman()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
+              </div>
+            </form>
           </div>
         </div>
 
-        <!-- Section Peminjaman Zoom -->
-        <div
-          id="peminjaman-zoom"
-          class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10 hidden"
-        >
+        <!--ZOOM-->
+        <div id="zoom" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
           <h2 class="text-xl font-semibold mb-4">Peminjaman Akun Zoom</h2>
 
-          <!-- Filter dan Tombol -->
-          <div
-            class="flex flex-wrap gap-4 items-center justify-between mb-4 w-full"
-          >
-            <input
-              type="text"
-              id="filterZoomNama"
-              placeholder="Cari nama..."
-              class="border border-gray-300 rounded px-4 py-2 flex-1 min-w-[200px]"
-              onkeyup="filterZoom()"
-            />
-            <button
-              onclick="exportTableToExcel('zoomTable', 'Zoom')"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              📤 Export Excel
-            </button>
-            <button
-              onclick="showForm('form-zoom')"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              + Tambahkan Peminjaman Zoom
-            </button>
+          <!-- Filter dan Aksi -->
+          <div class="flex flex-wrap gap-4 items-center mb-4">
+            <input type="text" id="filterZoomNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
+            <button onclick="exportTableToExcel('zoomTable', 'Zoom')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
+            <button onclick="showFormZoom()" id="btn-tambah-zoom" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Zoom</button>
           </div>
 
-          <!-- Tabel Zoom -->
-          <div class="overflow-x-auto w-full">
-            <table
-              id="zoomTable"
-              class="w-full text-sm text-left table-auto border border-gray-300"
-            >
+          <!-- Tabel -->
+          <div class="overflow-x-auto">
+            <table id="zoomTable" class="w-full border border-gray-300 text-sm">
               <thead class="bg-gray-100">
                 <tr>
-                  <th class="px-4 py-2 border">NPP</th>
-                  <th class="px-4 py-2 border">Nama</th>
-                  <th class="px-4 py-2 border">Bagian</th>
-                  <th class="px-4 py-2 border">Tanggal</th>
-                  <th class="px-4 py-2 border">Waktu</th>
-                  <th class="px-4 py-2 border">Kegiatan</th>
-                  <th class="px-4 py-2 border">Akun</th>
-                  <th class="px-4 py-2 border">Approval</th>
+                  <th class="px-2 border">NPP</th>
+                  <th class="px-2 border">Nama</th>
+                  <th class="px-2 border">Bagian</th>
+                  <th class="px-2 border">Tanggal</th>
+                  <th class="px-2 border">Waktu</th>
+                  <th class="px-2 border">Kegiatan</th>
+                  <th class="px-2 border">Akun</th>
+                  <th class="px-2 border">Approval</th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody>
+                <!-- Data akan dirender oleh JS -->
+              </tbody>
             </table>
+          </div>
+
+          <!-- Form Zoom -->
+          <div id="form-zoom" class="mt-8 border-t pt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Peminjaman Zoom</h3>
+            <form onsubmit="submitFormZoom(event)" class="grid gap-4 md:grid-cols-2">
+              <input type="text" id="zoom-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
+              <input type="text" id="zoom-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
+              <select id="zoom-bagian" class="border px-4 py-2 rounded" required>
+                <option value="">Pilih Bagian</option>
+                <option value="SDMUK">SDMUK</option>
+                <option value="PKP">PKP</option>
+                <option value="Yanser">Yanser</option>
+                <option value="Kepser">Kepser</option>
+                <option value="PMU">PMU</option>
+                <option value="Yanfaskes">Yanfaskes</option>
+              </select>
+              <input type="date" id="zoom-tanggal" class="border px-4 py-2 rounded" required />
+              <input type="time" id="zoom-waktu" class="border px-4 py-2 rounded" required />
+              <input type="text" id="zoom-kegiatan" placeholder="Topik/Kegiatan" class="border px-4 py-2 rounded md:col-span-2" required />
+              <div class="flex gap-2 md:col-span-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+                <button type="button" onclick="batalFormZoom()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
+              </div>
+            </form>
           </div>
         </div>
 
-        <!-- Section Pemesanan Grab -->
-        <div
-          id="pemesanan-grab"
-          class="page-section bg-white rounded-2xl shadow-lg p-6 mb-10 hidden"
-        >
+        <!--GRAB-->
+        <div id="grab" class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10">
           <h2 class="text-xl font-semibold mb-4">Pemesanan Grab</h2>
 
-          <!-- Filter dan Tombol -->
-          <div
-            class="flex flex-wrap gap-4 items-center justify-between mb-4 w-full"
-          >
-            <input
-              type="text"
-              id="filterGrabNama"
-              placeholder="Cari nama..."
-              class="border border-gray-300 rounded px-4 py-2 flex-1 min-w-[200px]"
-              onkeyup="filterGrab()"
-            />
-            <button
-              onclick="exportTableToExcel('grabTable', 'Grab')"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              📤 Export Excel
-            </button>
-            <button
-              onclick="showForm('form-grab')"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              + Tambahkan Pemesanan Grab
-            </button>
+          <!-- Filter dan Aksi -->
+          <div class="flex flex-wrap gap-4 items-center mb-4">
+            <input type="text" id="filterGrabNama" placeholder="Cari nama..." class="border border-gray-300 rounded px-4 py-2 flex-1" />
+            <button onclick="exportTableToExcel('grabTable', 'Grab')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">📤 Export Excel</button>
+            <button onclick="showFormGrab()" id="btn-tambah-grab" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">+ Tambah Grab</button>
           </div>
 
-          <!-- Tabel Grab -->
-          <div class="overflow-x-auto w-full">
-            <table
-              id="grabTable"
-              class="w-full text-sm text-left table-auto border border-gray-300"
-            >
+          <!-- Tabel -->
+          <div class="overflow-x-auto">
+            <table id="grabTable" class="w-full border border-gray-300 text-sm">
               <thead class="bg-gray-100">
                 <tr>
-                  <th class="px-4 py-2 border">NPP</th>
-                  <th class="px-4 py-2 border">Nama</th>
-                  <th class="px-4 py-2 border">Tanggal</th>
-                  <th class="px-4 py-2 border">Jam</th>
-                  <th class="px-4 py-2 border">Tujuan</th>
-                  <th class="px-4 py-2 border">Keterangan</th>
-                  <th class="px-4 py-2 border">Kode</th>
-                  <th class="px-4 py-2 border">Approval</th>
+                  <th class="px-2 border">NPP</th>
+                  <th class="px-2 border">Nama</th>
+                  <th class="px-2 border">Tanggal</th>
+                  <th class="px-2 border">Jam</th>
+                  <th class="px-2 border">Tujuan</th>
+                  <th class="px-2 border">Keterangan</th>
+                  <th class="px-2 border">Kode</th>
+                  <th class="px-2 border">Approval</th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody>
+                <!-- Data akan dirender oleh JS -->
+              </tbody>
             </table>
           </div>
-        </div>
 
-        <!-- Form Tambah Inventaris -->
-        <!-- Form Tambah Inventaris -->
-        <div
-          id="form-inventaris"
-          class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <h2 class="text-xl font-semibold mb-4">Form Tambah Inventaris</h2>
-          <form
-            class="space-y-4"
-            onsubmit="event.preventDefault(); submitFormInventaris();"
-          >
-            <input
-              type="text"
-              id="inv-kode"
-              placeholder="Kode Aset"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="inv-nama"
-              placeholder="Nama Aset"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <select id="inv-lokasi" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="Aula">Aula</option>
-              <option value="Mushola">Mushola</option>
-              <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
-              <option value="Ruang Kaca">Ruang Kaca</option>
-              <option value="Kepala Cabang">Kepala Cabang</option>
-              <option value="Ruang Server">Ruang Server</option>
-              <option value="SDMUK">SDMUK</option>
-              <option value="PKP">PKP</option>
-              <option value="Frontliner">Frontliner</option>
-              <option value="Kabag Yanser">Kabag Yanser</option>
-              <option value="Staf Yanser">Staf Yanser</option>
-              <option value="Kabag Kepser">Kabag Kepser</option>
-              <option value="Staf Kepser">Staf Kepser</option>
-              <option value="Ruang Inovasi">Ruang Inovasi</option>
-              <option value="Dapur">Dapur</option>
-              <option value="Gudang Dalam">Gudang Dalam</option>
-              <option value="Kabag PMU">Kabag PMU</option>
-              <option value="Staf PMU">Staf PMU</option>
-              <option value="Kabag Yanfaskes">Kabag Yanfaskes</option>
-              <option value="Staf Yanfaskes">Staf Yanfaskes</option>
-              <option value="Gudang Belakang">Gudang Belakang</option>
-              <option value="Kabupaten Batang">Kabupaten Batang</option>
-              <option value="Kabupaten Pekalongan">Kabupaten Pekalongan</option>
-              <option value="Kabupaten Pemalang">Kabupaten pemalang</option>
-            </select>
-            <select id="inv-kondisi" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="Baik">Baik</option>
-              <option value="Rusak">Rusak</option>
-              <option value="Rusak Berat">Rusak Berat</option>
-            </select>
-
-            <!-- Input Foto -->
-            <div>
-              <label class="block mb-1 text-sm font-medium text-gray-700"
-                >Upload Foto</label
-              >
-              <input
-                type="file"
-                id="inv-foto"
-                accept="image/*"
-                class="w-full border px-4 py-2 rounded bg-white file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-            </div>
-            <div class="flex gap-2">
-              <button
-                type="submit"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              >
-                Simpan
-              </button>
-              <button
-                type="button"
-                onclick="showForm('inventaris')"
-                class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-              >
-                Batal
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Form Tambah Mutasi -->
-        <div
-          id="form-mutasi"
-          class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <h2 class="text-xl font-semibold mb-4">Form Tambah Mutasi</h2>
-          <form
-            class="space-y-4"
-            onsubmit="event.preventDefault(); submitFormMutasi();"
-          >
-            <input
-              type="text"
-              id="mutasi-npp"
-              placeholder="NPP"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="mutasi-nama"
-              placeholder="Nama"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <select id="mutasi-bagian" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="SDMUK">SDMUK</option>
-              <option value="PKP">PKP</option>
-              <option value="Yanser">Yanser</option>
-              <option value="Kepser">Kepser</option>
-              <option value="PMU">PMU</option>
-              <option value="Yanfaskes">Yanfaskes</option>
-              <option value="Kabupaten Batang">Kabupaten Batang</option>
-              <option value="Kabupaten Pekalongan">Kabupaten Pekalongan</option>
-              <option value="Kabupaten Pemalang">Kabupaten pemalang</option>
-            </select>
-            <input
-              type="date"
-              id="mutasi-tanggal"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="time"
-              id="mutasi-jamPinjam"
-              placeholder="Jam Pinjam"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="time"
-              id="mutasi-jamSelesai"
-              placeholder="Jam Selesai"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <select
-              id="mutasi-kendaraan"
-              class="w-full border px-4 py-2 rounded"
-            >
-              <option value="">-- Pilih --</option>
-              <option value="Innova Kebo G 1366 HH">
-                Innova Kebo G 1366 HH
-              </option>
-              <option value="Innova Barong G 1427 GH">
-                Innova Barong G 1427 GH
-              </option>
-              <option value="Avanza G 1972 HH">Avanza G 1972 HH</option>
-              <option value="Ertiga  G 1532 JH">Innova Barong G 1427 GH</option>
-            </select>
-            <select id="mutasi-driver" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="Lutfi">Lutfi</option>
-              <option value="Trisno">Trisno</option>
-              <option value="Rifki">Rifki</option>
-            </select>
-            <input
-              type="text"
-              id="mutasi-tujuan"
-              placeholder="Tujuan"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <textarea
-              id="mutasi-keterangan"
-              placeholder="Keterangan"
-              class="w-full border px-4 py-2 rounded"
-            ></textarea>
-            <button
-              type="submit"
-              class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              Simpan
-            </button>
-            <button
-              type="button"
-              onclick="showForm('mutasi') "
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Batal
-            </button>
-          </form>
-        </div>
-
-        <!-- Form Tambah Peminjaman -->
-        <div
-          id="form-peminjaman"
-          class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <h2 class="text-xl font-semibold mb-4">Form Tambah Peminjaman</h2>
-          <form
-            class="space-y-4"
-            onsubmit="event.preventDefault(); submitFormPeminjaman();"
-          >
-            <input
-              type="text"
-              id="pinjam-npp"
-              placeholder="NPP"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="pinjam-nama"
-              placeholder="Nama"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <select id="pinjam-bagian" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="SDMUK">SDMUK</option>
-              <option value="PKP">PKP</option>
-              <option value="Yanser">Yanser</option>
-              <option value="Kepser">Kepser</option>
-              <option value="PMU">PMU</option>
-              <option value="Yanfaskes">Yanfaskes</option>
-              <option value="Kabupaten Batang">Kabupaten Batang</option>
-              <option value="Kabupaten Pekalongan">Kabupaten Pekalongan</option>
-              <option value="Kabupaten Pemalang">Kabupaten pemalang</option>
-            </select>
-            <input
-              type="date"
-              id="pinjam-tanggal"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="time"
-              id="pinjam-waktu"
-              placeholder="Waktu"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <textarea
-              id="pinjam-keterangan"
-              placeholder="Keterangan"
-              class="w-full border px-4 py-2 rounded"
-            ></textarea>
-            <select id="pinjam-ruangan" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="Aula">Aula</option>
-              <option value="Ruang Rapat Kecil">Ruang Rapat Kecil</option>
-              <option value="Ruang Kaca">Ruang Kaca</option>
-            </select>
-            <button
-              type="submit"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Simpan
-            </button>
-            <button
-              type="button"
-              onclick="showForm('peminjaman')"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Batal
-            </button>
-          </form>
-        </div>
-
-        <!-- Form Tambah Zoom -->
-        <div
-          id="form-zoom"
-          class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <h2 class="text-xl font-semibold mb-4">
-            Form Tambah Peminjaman Zoom
-          </h2>
-          <form
-            class="space-y-4"
-            onsubmit="event.preventDefault(); submitFormZoom();"
-          >
-            <input
-              type="text"
-              id="zoom-npp"
-              placeholder="NPP"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="zoom-nama"
-              placeholder="Nama"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <select id="zoom-bagian" class="w-full border px-4 py-2 rounded">
-              <option value="">-- Pilih --</option>
-              <option value="SDMUK">SDMUK</option>
-              <option value="PKP">PKP</option>
-              <option value="Yanser">Yanser</option>
-              <option value="Kepser">Kepser</option>
-              <option value="PMU">PMU</option>
-              <option value="Yanfaskes">Yanfaskes</option>
-              <option value="Kabupaten Batang">Kabupaten Batang</option>
-              <option value="Kabupaten Pekalongan">Kabupaten Pekalongan</option>
-              <option value="Kabupaten Pemalang">Kabupaten pemalang</option>
-            </select>
-            <input
-              type="date"
-              id="zoom-tanggal"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="time"
-              id="zoom-waktu"
-              placeholder="Waktu"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="zoom-kegiatan"
-              placeholder="Topik/Kegiatan"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <div
-              id="wrap-zoom-akun"
-              class="flex items-center gap-2 mb-2"
-              style="display: none"
-            >
-              <button
-                type="button"
-                id="edit-akun-btn"
-                class="bg-blue-500 text-white px-2 py-1 rounded"
-              >
-                Edit
-              </button>
-            </div>
-            <button
-              type="submit"
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Simpan
-            </button>
-            <button
-              type="button"
-              onclick="showForm('peminjaman-zoom')"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Batal
-            </button>
-          </form>
-        </div>
-
-        <!-- Form Tambah Grab -->
-        <div
-          id="form-grab"
-          class="page-section hidden bg-white rounded-2xl shadow-lg p-6 mb-10"
-        >
-          <h2 class="text-xl font-semibold mb-4">Form Tambah Pemesanan Grab</h2>
-          <form
-            class="space-y-4"
-            onsubmit="event.preventDefault(); submitFormGrab();"
-          >
-            <input
-              type="text"
-              id="grab-npp"
-              placeholder="NPP"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="grab-nama"
-              placeholder="Nama"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="date"
-              id="grab-tanggal"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="time"
-              id="grab-jam"
-              placeholder="Jam"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <input
-              type="text"
-              id="grab-tujuan"
-              placeholder="Tujuan"
-              class="w-full border px-4 py-2 rounded"
-            />
-            <textarea
-              id="grab-keterangan"
-              placeholder="Keterangan"
-              class="w-full border px-4 py-2 rounded"
-            ></textarea>
-            <div
-              id="wrap-grab-kode"
-              class="flex items-center gap-2 mb-2"
-              style="display: none"
-            >
-              <button
-                type="button"
-                id="edit-kode-btn"
-                class="bg-blue-500 text-white px-2 py-1 rounded"
-              >
-                Edit
-              </button>
-            </div>
-            <button
-              type="submit"
-              class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Simpan
-            </button>
-            <button
-              type="button"
-              onclick="showForm('pemesanan-grab')"
-              class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Batal
-            </button>
-          </form>
+          <!-- Form Grab -->
+          <div id="form-grab" class="mt-8 border-t pt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Form Tambah / Edit Grab</h3>
+            <form onsubmit="submitFormGrab(event)" class="grid gap-4 md:grid-cols-2">
+              <input type="text" id="grab-npp" placeholder="NPP" class="border px-4 py-2 rounded" required />
+              <input type="text" id="grab-nama" placeholder="Nama" class="border px-4 py-2 rounded" required />
+              <input type="date" id="grab-tanggal" class="border px-4 py-2 rounded" required />
+              <input type="time" id="grab-jam" placeholder="Jam" class="border px-4 py-2 rounded" required />
+              <input type="text" id="grab-tujuan" plabceholder="Tujuan" class="border px-4 py-2 rounded" required />
+              <textarea id="grab-keterangan" placeholder="Keterangan" class="border px-4 py-2 rounded md:col-span-2" required></textarea>
+              <div class="flex gap-2 md:col-span-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
+                <button type="button" onclick="batalFormGrab()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded">Batal</button>
+              </div>
+            </form>
+          </div>
         </div>
       </main>
     </div>
+    <footer class="mt-auto text-center text-sm text-gray-500 py-4 w-full border-t border-gray-200 bg-white">© 2025 SIBABE by SDMUK</footer>
 
-    <script>
-      function getUserRole() {
-        return localStorage.getItem("role");
-      }
-
-      function filterTable() {
-        const searchInput =
-          document.getElementById("filterKodeNama")?.value.toLowerCase() || "";
-        const lokasiFilter =
-          document.getElementById("filterLokasi")?.value.toLowerCase() || "";
-        const kondisiFilter =
-          document
-            .getElementById("filterKondisiSidebar")
-            ?.value.toLowerCase() || "";
-
-        const table = document.getElementById("inventarisTable");
-        const tr = table?.getElementsByTagName("tr");
-
-        if (!table || !tr) return;
-
-        for (let i = 1; i < tr.length; i++) {
-          const tdKode = tr[i].getElementsByTagName("td")[0];
-          const tdNama = tr[i].getElementsByTagName("td")[1];
-          const tdLokasi = tr[i].getElementsByTagName("td")[2];
-          const tdKondisi = tr[i].getElementsByTagName("td")[3];
-
-          if (tdKode && tdNama && tdLokasi && tdKondisi) {
-            const kodeValue = tdKode.textContent.toLowerCase();
-            const namaValue = tdNama.textContent.toLowerCase();
-            const lokasiValue = tdLokasi.textContent.toLowerCase();
-            const kondisiValue = tdKondisi.textContent.toLowerCase();
-
-            const matchSearch =
-              kodeValue.includes(searchInput) ||
-              namaValue.includes(searchInput);
-            const matchLokasi =
-              lokasiValue === lokasiFilter || lokasiFilter === "";
-            const matchKondisi =
-              kondisiValue === kondisiFilter || kondisiFilter === "";
-
-            if (matchSearch && matchLokasi && matchKondisi) {
-              tr[i].style.display = "";
-            } else {
-              tr[i].style.display = "none";
-            }
-          }
-        }
-      }
-      document.addEventListener("DOMContentLoaded", function () {
-        if (getUserRole && getUserRole() === "admin") {
-          const countPending = (key) => {
-            return (JSON.parse(localStorage.getItem(key) || "[]") || []).filter(
-              (item) => item.approval === false
-            ).length;
-          };
-          document.getElementById("count-mutasi-pending").textContent =
-            countPending("mutasi");
-          document.getElementById("count-peminjaman-pending").textContent =
-            countPending("peminjaman");
-          document.getElementById("count-zoom-pending").textContent =
-            countPending("zoom");
-          document.getElementById("count-grab-pending").textContent =
-            countPending("grab");
-
-          // Tampilkan dashboard jika admin
-          document.getElementById("admin-dashboard").classList.remove("hidden");
-        }
-      });
-
-      function filterMutasi() {
-        const input =
-          document.getElementById("filterMutasiNama")?.value.toLowerCase() ||
-          "";
-        const bagian =
-          document.getElementById("filterMutasiBagian")?.value.toLowerCase() ||
-          "";
-        const table = document.getElementById("mutasiTable");
-        const tr = table?.getElementsByTagName("tr");
-
-        if (!table || !tr) return;
-
-        for (let i = 1; i < tr.length; i++) {
-          const tdNama = tr[i].getElementsByTagName("td")[1];
-          const tdBagian = tr[i].getElementsByTagName("td")[2];
-
-          if (tdNama && tdBagian) {
-            const namaValue = tdNama.textContent.toLowerCase();
-            const bagianValue = tdBagian.textContent.toLowerCase();
-
-            if (
-              (namaValue.includes(input) || input === "") &&
-              (bagianValue === bagian || bagian === "")
-            ) {
-              tr[i].style.display = "";
-            } else {
-              tr[i].style.display = "none";
-            }
-          }
-        }
-      }
-
-      function filterPeminjaman() {
-        const input =
-          document
-            .getElementById("filterPeminjamanNama")
-            ?.value.toLowerCase() || "";
-        const ruangan =
-          document
-            .getElementById("filterPeminjamanRuangan")
-            ?.value.toLowerCase() || "";
-        const table = document.getElementById("peminjamanTable");
-        const tr = table?.getElementsByTagName("tr");
-
-        if (!table || !tr) return;
-
-        for (let i = 1; i < tr.length; i++) {
-          const tdNama = tr[i].getElementsByTagName("td")[1];
-          const tdRuangan = tr[i].getElementsByTagName("td")[6];
-
-          if (tdNama && tdRuangan) {
-            const namaValue = tdNama.textContent.toLowerCase();
-            const ruanganValue = tdRuangan.textContent.toLowerCase();
-
-            if (
-              (namaValue.includes(input) || input === "") &&
-              (ruanganValue === ruangan || ruangan === "")
-            ) {
-              tr[i].style.display = "";
-            } else {
-              tr[i].style.display = "none";
-            }
-          }
-        }
-      }
-
-      function filterZoom() {
-        const input =
-          document.getElementById("filterZoomNama")?.value.toLowerCase() || "";
-        const table = document.getElementById("zoomTable");
-        const tr = table?.getElementsByTagName("tr");
-
-        if (!table || !tr) return;
-
-        for (let i = 1; i < tr.length; i++) {
-          const tdNama = tr[i].getElementsByTagName("td")[1];
-          const tdAkun = tr[i].getElementsByTagName("td")[6];
-
-          if (tdNama && tdAkun) {
-            const namaValue = tdNama.textContent.toLowerCase();
-            const akunValue = tdAkun.textContent.toLowerCase();
-
-            if (
-              (namaValue.includes(input) || input === "") &&
-              (akunValue === akun || akun === "")
-            ) {
-              tr[i].style.display = "";
-            } else {
-              tr[i].style.display = "none";
-            }
-          }
-        }
-      }
-
-      function filterGrab() {
-        const input =
-          document.getElementById("filterGrabNama")?.value.toLowerCase() || "";
-        const table = document.getElementById("grabTable");
-        const tr = table?.getElementsByTagName("tr");
-
-        if (!table || !tr) return;
-
-        for (let i = 1; i < tr.length; i++) {
-          const tdNama = tr[i].getElementsByTagName("td")[1];
-          if (tdNama) {
-            const namaValue = tdNama.textContent.toLowerCase();
-            tr[i].style.display = namaValue.includes(input) ? "" : "none";
-          }
-        }
-      }
-
-      function logout() {
-        localStorage.removeItem("role");
-        window.location.href = "login.html";
-      }
-    </script>
     <script src="aset-app.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const role = localStorage.getItem("role");
-        if (role === "admin") {
-          document.getElementById("admin-reset").innerHTML = `
-        <button onclick="resetSeluruhData()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">
-          🔥 Reset Semua Data
-        </button>
-      `;
-        }
-      });
-    </script>
-    <!-- Overlay -->
-    <div
-      id="overlay"
-      class="fixed inset-0 bg-black bg-opacity-50 hidden z-30 md:hidden"
-    ></div>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const toggleBtn = document.getElementById("sidebarToggle");
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-
-        if (!toggleBtn || !sidebar) return;
-
-        toggleBtn.addEventListener("click", () => {
-          sidebar.classList.toggle("-translate-x-full");
-          overlay?.classList.toggle("hidden");
-        });
-
-        overlay?.addEventListener("click", () => {
-          sidebar.classList.add("-translate-x-full");
-          overlay.classList.add("hidden");
-        });
-
-        // Tutup sidebar saat klik nav link di layar kecil
-        document.querySelectorAll(".nav-link").forEach((link) => {
-          link.addEventListener("click", () => {
-            if (window.innerWidth < 768) {
-              sidebar.classList.add("-translate-x-full");
-              overlay.classList.add("hidden");
-            }
-          });
-        });
-      });
-
-      function showToast(message, type = "success") {
-        const existing = document.getElementById("toast-container");
-        if (existing) existing.remove();
-
-        const toast = document.createElement("div");
-        toast.id = "toast-container";
-        toast.className =
-          `fixed top-5 right-5 z-50 px-4 py-3 rounded shadow-lg text-white text-sm animate-fade-in-out ` +
-          (type === "success"
-            ? "bg-green-500"
-            : type === "error"
-            ? "bg-red-500"
-            : "bg-yellow-500");
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-      }
-
-      const style = document.createElement("style");
-      style.innerHTML = `
-      @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(-10px); }
-        10% { opacity: 1; transform: translateY(0); }
-        90% { opacity: 1; }
-        100% { opacity: 0; transform: translateY(-10px); }
-      }
-      .animate-fade-in-out {
-        animation: fadeInOut 3s ease-in-out;
-      }`;
-      document.head.appendChild(style);
-
-      function fieldKosong(data, fields) {
-        const labelMap = {
-          "mutasi-npp": "NPP belum diisi, ojo lali diisi ya!",
-          "mutasi-barang": "Nama barang durung dipilih!",
-          "mutasi-ke": "Tujuan mutasi durung lengkap.",
-          "pinjam-npp": "NPP peminjam durung diisi!",
-          "pinjam-ruangan": "Pilih ruangan disek, ojo kosong!",
-          NPP: "NPP durung diisi!",
-          "grab-npp": "NPP Grab durung diisi!",
-          "inv-nama": "Jeneng barang kudu diisi!",
-          "inv-lokasi": "Lokasi barang kudu jelas!",
-          "inv-kondisi": "Kondisi barang kudu dipilih!",
-          "inv-foto": "Upload foto e sik, ben luwih jelas!",
-        };
-
-        const kosong = fields.find(
-          (key) => !data[key] || data[key].trim() === ""
-        );
-        if (kosong) {
-          showToast(
-            labelMap[kosong] || `Field '${kosong}' durung diisi!`,
-            "error"
-          );
-          return true;
-        }
-        return false;
-      }
-
-      function resetData(key) {
-        const role = localStorage.getItem("role");
-        if (role !== "admin") {
-          showToast("Hanya admin sing iso ngreset data!", "error");
-          return;
-        }
-        const konfirmasi = confirm(
-          "Yakin pengin ngilangke kabeh data " + key + "?"
-        );
-        if (!konfirmasi) return;
-        localStorage.removeItem(key);
-        renderAllTables();
-        showToast("Data wis direset kabeh!", "success");
-      }
-      window.setujuData = function (key, index) {
-        const data = JSON.parse(localStorage.getItem(key) || "[]");
-        if (!data[index]) return;
-        data[index].approval = true;
-        localStorage.setItem(key, JSON.stringify(data));
-        showToast("Data wis disetujoni, mantap!", "success");
-        renderAllTables();
-      };
-
-      window.hapusData = function (key, index) {
-        const data = JSON.parse(localStorage.getItem(key) || "[]");
-        data.splice(index, 1);
-        localStorage.setItem(key, JSON.stringify(data));
-        showToast("Data wis dihapus, ora iso bali maneh!", "success");
-        renderAllTables();
-      };
-
-      window.editField = function (key, index, field) {
-        const data = JSON.parse(localStorage.getItem(key) || "[]");
-        const item = data[index];
-        if (!item) return;
-        const nilaiBaru = prompt(`Edit ${field}`, item[field] || "");
-        if (nilaiBaru !== null && nilaiBaru.trim() !== "") {
-          item[field] = nilaiBaru.trim();
-          localStorage.setItem(key, JSON.stringify(data));
-          showToast("Field sukses diupdate, jos!", "success");
-          renderAllTables();
-        }
-      };
-    </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-      function exportTableToExcel(tableId, filename = "") {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.table_to_sheet(table);
-        XLSX.utils.book_append_sheet(wb, ws, filename || "Sheet1");
-        XLSX.writeFile(wb, `${filename || "export"}.xlsx`);
-      }
-    </script>
-
-    <script>
-      let timeoutHandle;
-
-      function logoutUserByInactivity() {
-        showToast("Kamu telah logout karena tidak aktif", "warning");
-        localStorage.removeItem("role");
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 1500);
-      }
-
-      function resetInactivityTimer() {
-        clearTimeout(timeoutHandle);
-        timeoutHandle = setTimeout(logoutUserByInactivity, 15 * 60 * 1000); // 15 menit
-      }
-
-      // Reset timer saat user melakukan interaksi
-      ["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(
-        (evt) => {
-          document.addEventListener(evt, resetInactivityTimer);
-        }
-      );
-
-      // Inisialisasi saat halaman dimuat
-      document.addEventListener("DOMContentLoaded", resetInactivityTimer);
-    </script>
-
-    <script>
-      function showToast(message, type = "success") {
-        const existing = document.getElementById("toast-container");
-        if (existing) existing.remove();
-
-        const toast = document.createElement("div");
-        toast.id = "toast-container";
-        toast.className =
-          "fixed top-5 right-5 z-50 px-4 py-3 rounded shadow-lg text-white text-sm animate-fade-in-out " +
-          (type === "success"
-            ? "bg-green-500"
-            : type === "error"
-            ? "bg-red-500"
-            : "bg-yellow-500");
-        toast.innerText = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-      }
-
-      const style = document.createElement("style");
-      style.innerHTML = `
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translateY(-10px); }
-          10% { opacity: 1; transform: translateY(0); }
-          90% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(-10px); }
-        }
-        .animate-fade-in-out {
-          animation: fadeInOut 3s ease-in-out;
-        }
-      `;
-      document.head.appendChild(style);
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   </body>
 </html>
